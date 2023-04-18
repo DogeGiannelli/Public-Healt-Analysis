@@ -10,9 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 cancer <- read.csv('Dataset/Cancerregister.csv', sep = ';')
-death <- read.csv('Deathregister.csv', sep = ';')
-germanH <- read.csv('GermanH.csv', sep = ';')
-sdo <- read.csv('SDO.csv', sep = ';')
+death <- read.csv('Dataset/Deathregister.csv', sep = ';')
+germanH <- read.csv('Dataset/GermanH.csv', sep = ';')
+sdo <- read.csv('Dataset/SDO.csv', sep = ';')
 ```
 
 

@@ -100,6 +100,11 @@ sdo <- anti_join(sdo, df_non_soddisfano, by = "idnum")
 
 ```
 
+### VALUTO INCONGRUENZA ETA
+
+```{r}
+germanH <- germanH[germanH$age<100,] # 8 obs sopra i 100 anni
+```
 
 
 # 2. Effettuare il record-linkage con lo scopo di costruire l’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’ su base mensile per i casi incidenti nel mese di gennaio 1984.
@@ -114,17 +119,14 @@ Per effettuare questi passaggi, puoi utilizzare diverse librerie di R, come ad e
 
 ### record-linkage 
 ```{r}
-df <- merge(cancer, death, by = "idnum", all = 'TRUE') %>% 
-             merge(germanH, by = "idnum", all = 'TRUE') %>% 
-             merge(sdo, by = "idnum", all = 'TRUE')
+df_rl <- merge(cancer, sdo, by = "idnum", all = 'TRUE') %>% 
+             merge(germanH, by = "idnum", all = 'TRUE')
 ```
-
-
 
 
 ### estraggo porzione di dataset d'interesse
 ```{r}
-df_seno <- subset(df, tipotumore == 'seno' & Prestazione == 'chirurgica')
+df_seno <- subset(df_rl, tipotumore == 'seno' & Prestazione == 'chirurgica' & sex=='Female' & (df_rl$Stadio == 'Stadio I' | df_rl$Stadio == 'Stadio II'))
 #df_seno <- df[df$tipotumore == 'seno',]
 ```
 
@@ -133,30 +135,28 @@ df_seno <- subset(df, tipotumore == 'seno' & Prestazione == 'chirurgica')
 ```{r}
 df_seno$giorni_passati <- as.numeric(difftime(df_seno$dataprestazione, df_seno$incidenza, units = "days"))
 
-```
-
 ### creo variabile binaria pari a 1 se intervento avvenuto prima dei 60 giorni, altrimenti 0
 
-```{r}
 df_seno$entro_60_giorni <- ifelse(df_seno$giorni_passati <= 60, 1, 0)
+
+table(df_seno$entro_60_giorni)
+
 ```
+
+
 
 ### indicatore
 #Denominatore: tutte le pazienti di sesso femminile con tumore al seno insorto tra 01/01/1984 e 31/01/1984, in stadio I o II, che hanno subito un intervento chirurgico
+
 #Numeratore: tutte le pazienti al denominatore con intervallo tra la data d’incidenza e la data dell’intervento ≤60 giorni
 
 ```{r}
-num <- nrow(df_seno[df_seno$entro_60_giorni == 1 & (df_seno$Stadio == 'Stadio I' | df_seno$Stadio == 'Stadio II'),])
-den <- nrow(df_seno[df_seno$Stadio == 'Stadio I' | df_seno$Stadio == 'Stadio II',])
+num <- nrow(df_seno[df_seno$entro_60_giorni == 1,])
+den <- nrow(df_seno)
 ind_tumore_seno <- (num/den)*100
 ind_tumore_seno
 ```
 
-
-```{r}
-nrow(df_seno[df_seno$entro_60_giorni == 1 & (df_seno$Stadio == 'Stadio I' | df_seno$Stadio == 'Stadio II'),])
-nrow(df_seno[df_seno$Stadio == 'Stadio I' | df_seno$Stadio == 'Stadio II',])
-```
 
 
 # 3. Calcolare l’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’ per ospedale e darne rappresentazione grafica, includendo come valore di riferimento nel grafico l’indicatore calcolato sull’intero dataset. Per esempi relativi alla rappresentazione grafica fare riferimento al sito Piano Nazionale Esiti (PNE) o siti analoghi trattati a lezione.

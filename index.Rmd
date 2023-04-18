@@ -112,7 +112,15 @@ Crea una variabile binaria che assuma valore 1 se il numero di giorni trascorsi 
 Aggrega i dati per mese e calcola il numero di casi incidenti nel mese di gennaio 1984, il numero di casi in cui è stato effettuato l'intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla diagnosi e la proporzione di casi in cui è stato effettuato l'intervento chirurgico entro il termine stabilito.
 Per effettuare questi passaggi, puoi utilizzare diverse librerie di R, come ad esempio "dplyr" e "tidyr" per la manipolazione dei dati e "lubridate" per il calcolo delle differenze tra le date.
 
-### 
+### record-linkage 
+```{r}
+df <- merge(cancer, death, by = "idnum", all = 'TRUE') %>% 
+             merge(germanH, by = "idnum", all = 'TRUE') %>% 
+             merge(sdo, by = "idnum", all = 'TRUE')
+```
+
+
+
 
 ### estraggo porzione di dataset d'interesse
 ```{r}

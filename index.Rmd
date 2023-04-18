@@ -13,7 +13,7 @@ set.seed(500)
 
 Sys.setenv(TZ='GMT') # imposto la time zone
 
-packages <- c("dplyr",) # librerie
+packages <- c("dplyr",'epiR','epitools','ggplot2') # librerie
 
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
@@ -130,6 +130,13 @@ df_seno <- subset(df_rl, tipotumore == 'seno' & Prestazione == 'chirurgica' & se
 #df_seno <- df[df$tipotumore == 'seno',]
 ```
 
+controllo valori mancanti
+```{r}
+colSums(is.na(df_seno))
+df_seno <- df_seno[complete.cases(df_seno$incidenza),]
+colSums(is.na(df_seno))
+```
+
 
 ### calcolo i giorno passati tra diagnosi (incidenza) e intervento
 ```{r}
@@ -193,77 +200,34 @@ ggplot(indice, aes(x = ospedale, y = indice)) +
 
 # 4. Utilizzare il dataset ottenuto per valutare l’associazione a livello individuale tra il livello di educazione ed il valore dell’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’. Quale misura di effetto è possibile stimare? Calcolate ed interpretate tale misura di effetto grezza. Riportare anche la relativa tabella di contingenza.
 
-
-
-
-
-
-
-creazione variabile binaria educazione
+##creazione variabile binaria educazione
 ```{r}
 # Eliminazione delle righe con dati mancanti
-#df_seno_stadio_I_II <- na.omit(df_seno_stadio_I_II)
+colSums(is.na(df_seno))
+df_seno <- df_seno[complete.cases(df_seno$education),]
+colSums(is.na(df_seno))
 
 # Conversione della variabile 'educazione' in una variabile binaria
-df_seno_stadio_I_II$education_bin <- ifelse(df_seno_stadio_I_II$education == "low", 0, 1)
-
-df_seno_stadio_I_II <- na.omit(df_seno_stadio_I_II)
+df_seno$education_bin <- ifelse(df_seno$education == "low", 0, 1)
 ```
 
 In questo caso, stiamo dicendo a R di creare un modello di regressione logistica in cui la variabile dipendente è 'entro_60_giorni' (l'indicatore che vogliamo prevedere) e la variabile indipendente è 'educazione_bin' (la variabile binaria per il livello di educazione). La funzione family = binomial() specifica che vogliamo eseguire una regressione logistica.
 
 ```{r}
 # Modello di regressione logistica
-modello_logistico_stadio_I_II <- glm(entro_60_giorni ~ education_bin, family = binomial(), data = df_seno_stadio_I_II)
+modello_logistico_seno <- glm(entro_60_giorni ~ education_bin, family = binomial(), data = df_seno)
 
 # Riepilogo del modello
-summary(modello_logistico_stadio_I_II)
+summary(modello_logistico_seno)
+
+#Lettura Coefficienti
+exp(cbind("OR" = coef(modello_logistico_seno), confint.default(modello_logistico_seno, level = 0.95)))
 ```
 
-
-```{r}
-# Impostazione manuale del valore di educazione_bin a NA per le righe in cui educazione è mancante
-df_seno_stadio_I_II$educazione<-as.factor(df_seno_stadio_I_II$educazione)
-df_seno_stadio_I_II$educazione_bin <- ifelse(is.na(df_seno_stadio_I_II$educazione), NA, ifelse(df_seno_stadio_I_II$educazione == "low", 0, 1))
-
-# Eliminazione delle righe con dati mancanti
-#df_seno_stadio_I_II <- na.omit(df_seno_stadio_I_II)
-
-# Modello di regressione logistica
-modello_logistico <- glm(entro_60_giorni ~ education_bin, family = binomial(), data = df_seno_stadio_I_II)
-
-# Riepilogo del modello
-summary(modello_logistico)
-
-#SBAGLIATO va LETTO CON EXP()
-```
 L'odds ratio calcolato è 0.98, con un intervallo di confidenza al 95% che va da 0.51 a 1.89. Questo indica che non c'è evidenza di un'associazione significativa tra il livello di educazione e l'intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi. L'OR di 0.98 indica che il rapporto tra le probabilità di avere l'intervento entro 60 giorni nel gruppo con livello di educazione "medium/high" rispetto a quello con livello di educazione "no/low" è di 0.98. Tuttavia, essendo l'intervallo di confidenza che include anche il valore 1, non possiamo considerare questo risultato statisticamente significativo.
 ```{r}
 # tabella di contingenza
-twoby2(df_seno_stadio_I_II$entro_60_giorni, df_seno_stadio_I_II$education_bin)
-
-epi.2by2(table(df_seno_stadio_I_II$entro_60_giorni, df_seno_stadio_I_II$education_bin), method="cohort.count")
-```
-
-```{r}
-#OPPURE
-df_seno_stadio_I_II_60days<-df_seno_stadio_I_II[df_seno_stadio_I_II$entro_60_giorni==1,]
-
-# Conversione della variabile 'educazione' in una variabile binaria
-df_seno_stadio_I_II_60days$education_bin <- ifelse(df_seno_stadio_I_II_60days$education == "low", 0, 1)
-
-library(dplyr)
-df_seno_stadio_I_II_60days <- merge(df_seno_stadio_I_II_60days, indice, by = "ospedale", all = 'TRUE')
-
-model1<-glm(education_bin~indice,family=binomial,data=df_seno_stadio_I_II_60days)
-summary(model1)
-round(exp(cbind("OR" = coef(model1), confint.default(model1, level = 0.95))),4)
-
-table(df_seno_stadio_I_II_60days$indice, df_seno_stadio_I_II_60days$education_bin)
-
-twoby2(df_seno_stadio_I_II_60days$indice, df_seno_stadio_I_II_60days$education_bin)
-
-epi.2by2(table(df_seno_stadio_I_II_60days$indice, df_seno_stadio_I_II_60days$education_bin), method="cohort.count")
+epi.2by2(table(df_seno$entro_60_giorni, df_seno$education_bin), method="cohort.count")
 ```
 
 # 5. Calcolate la stessa misura di effetto, questa volta aggiustata per la sola variabile ‘working’, mediante il metodo Mantel Haenszel. Interpretate il risultato.

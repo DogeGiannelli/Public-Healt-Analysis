@@ -234,10 +234,10 @@ epi.2by2(table(df_seno$entro_60_giorni, df_seno$education_bin), method="cohort.c
 ```{r}
 library(epitools)
 
-df_seno_stadio_I_II$work_bin <- ifelse(df_seno_stadio_I_II$work == "yes", 1, 0)
+df_seno$work_bin <- ifelse(df_seno$work == "yes", 1, 0)
 
 # tabella di contingenza
-tab <- table(df_seno_stadio_I_II$education_bin[df_seno_stadio_I_II$work_bin ==1 ],df_seno_stadio_I_II$entro_60_giorni[df_seno_stadio_I_II$work_bin ==1])
+tab <- table(df_seno$entro_60_giorni, df_seno$education_bin, df_seno$work_bin)
 
 epi.2by2(tab, method="cohort.count")
 # Mantel-Haenszel test

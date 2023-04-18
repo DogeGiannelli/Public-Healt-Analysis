@@ -1,0 +1,778 @@
+---
+title: "PROGETTO"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+cancer <- read.csv('Cancerregister.csv', sep = ';')
+death <- read.csv('Deathregister.csv', sep = ';')
+germanH <- read.csv('GermanH.csv', sep = ';')
+sdo <- read.csv('SDO.csv', sep = ';')
+```
+
+
+# 1. Esaminare i dati e riportare le statistiche descrittive in una tabella per ciascun dataset. Per le date riportare data minima e data massima. Fare attenzione alla possibilità di dati mancanti, incongruenze tra date, record ripetuti che potrebbero creare problemi in fase di linkage e analisi. I record con dati ripetuti o incongruenze tra date (eg. Data trattamento precedente alla data d’incidenza) devono essere segnalati nel report e poi eliminati per le analisi successive.
+
+
+```{r}
+cancer_sum <- as.data.frame(summary(cancer))
+#eath_sum <- as.data.frame(summary(death))
+#erman_sum <- as.data.frame(summary(germanH))
+#do_sum <- as.data.frame(summary(sdo))
+
+
+summary(cancer)
+summary(death)
+summary(germanH)
+summary(sdo)
+```
+
+```{r}
+library(dplyr)
+df <- merge(cancer, death, by = "idnum", all = 'TRUE') %>% 
+             merge(germanH, by = "idnum", all = 'TRUE') %>% 
+             merge(sdo, by = "idnum", all = 'TRUE')
+```
+
+### VALUTO DATI RIPETUTI
+
+```{r}
+n_distinct(df$idnum)
+```
+
+```{r}
+duplicated_rows <- duplicated(df$idnum)
+
+# visualizza le righe duplicate
+df[duplicated_rows, ]
+```
+
+
+```{r}
+df[df$idnum == 192, ]
+df[df$idnum == 363, ]
+df[df$idnum == 1933, ]
+
+```
+
+Dati ripetuti per i pazienti 192, 363, 1933 --> mantengo solo una osservazione
+
+```{r}
+df <- unique(df)
+
+```
+
+### VALUTO INCONGRUENZA TRA DATE
+
+```{r}
+df$incidenza <- as.Date(df$incidenza, format="%d/%m/%Y")
+df$dataprestazione <- as.Date(df$dataprestazione, format="%d/%m/%Y")
+df$dimissione <- as.Date(df$dimissione, format="%d/%m/%Y")
+df$enddate <- as.Date(df$enddate, format="%Y-%m-%d")
+
+```
+
+
+```{r}
+# Selezione delle righe che soddisfano la condizione
+df_non_soddisfano <- subset(df, dataprestazione < incidenza) # 0 obs
+
+df_non_soddisfano1 <- subset(df, dimissione < dataprestazione) # 42 obs
+
+df_non_soddisfano2 <- subset(df, dimissione < incidenza) # 0 obs
+
+# elimino osservazioni da df
+df <- anti_join(df, df_non_soddisfano1, by = "idnum")
+
+```
+
+
+
+# 2. Effettuare il record-linkage con lo scopo di costruire l’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’ su base mensile per i casi incidenti nel mese di gennaio 1984.
+
+Il record linkage è una tecnica che permette di collegare informazioni contenute in diverse fonti dati. Per costruire l'indicatore "Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi" su base mensile per i casi incidenti nel mese di gennaio 1984, puoi seguire i seguenti passi:
+
+Unisci i dati relativi ai casi incidenti nel mese di gennaio 1984 provenienti dalle diverse fonti dati (ad esempio, i dati relativi alla diagnosi e quelli relativi all'intervento chirurgico) in un unico dataset.
+Crea una variabile che rappresenti il numero di giorni trascorsi tra la data di diagnosi e la data dell'intervento chirurgico.
+Crea una variabile binaria che assuma valore 1 se il numero di giorni trascorsi tra la data di diagnosi e la data dell'intervento chirurgico è inferiore o uguale a 60, altrimenti 0.
+Aggrega i dati per mese e calcola il numero di casi incidenti nel mese di gennaio 1984, il numero di casi in cui è stato effettuato l'intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla diagnosi e la proporzione di casi in cui è stato effettuato l'intervento chirurgico entro il termine stabilito.
+Per effettuare questi passaggi, puoi utilizzare diverse librerie di R, come ad esempio "dplyr" e "tidyr" per la manipolazione dei dati e "lubridate" per il calcolo delle differenze tra le date.
+
+### estraggo porzione di dataset d'interesse
+```{r}
+df_seno <- subset(df, tipotumore == 'seno' & Prestazione == 'chirurgica')
+#df_seno <- df[df$tipotumore == 'seno',]
+```
+
+
+### calcolo i giorno passati tra diagnosi (incidenza) e intervento
+```{r}
+df_seno$giorni_passati <- as.numeric(difftime(df_seno$dataprestazione, df_seno$incidenza, units = "days"))
+
+```
+
+### creo variabile binaria pari a 1 se intervento avvenuto prima dei 60 giorni, altrimenti 0
+
+```{r}
+df_seno$entro_60_giorni <- ifelse(df_seno$giorni_passati <= 60, 1, 0)
+```
+
+### indicatore
+#Denominatore: tutte le pazienti di sesso femminile con tumore al seno insorto tra 01/01/1984 e 31/01/1984, in stadio I o II, che hanno subito un intervento chirurgico
+#Numeratore: tutte le pazienti al denominatore con intervallo tra la data d’incidenza e la data dell’intervento ≤60 giorni
+
+```{r}
+num <- nrow(df_seno[df_seno$entro_60_giorni == 1 & (df_seno$Stadio == 'Stadio I' | df_seno$Stadio == 'Stadio II'),])
+den <- nrow(df_seno[df_seno$Stadio == 'Stadio I' | df_seno$Stadio == 'Stadio II',])
+ind_tumore_seno <- (num/den)*100
+ind_tumore_seno
+```
+
+
+```{r}
+nrow(df_seno[df_seno$entro_60_giorni == 1 & (df_seno$Stadio == 'Stadio I' | df_seno$Stadio == 'Stadio II'),])
+nrow(df_seno[df_seno$Stadio == 'Stadio I' | df_seno$Stadio == 'Stadio II',])
+```
+
+
+# 3. Calcolare l’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’ per ospedale e darne rappresentazione grafica, includendo come valore di riferimento nel grafico l’indicatore calcolato sull’intero dataset. Per esempi relativi alla rappresentazione grafica fare riferimento al sito Piano Nazionale Esiti (PNE) o siti analoghi trattati a lezione.
+
+
+```{r}
+df_seno$ospedale <- as.factor(df_seno$ospedale)
+```
+
+
+Selezione subset per semplificare il calcolo condizionato dell'indicatore per ospedale
+```{r}
+df_seno_stadio_I_II <- df_seno[df_seno$Stadio == 'Stadio I' | df_seno$Stadio == 'Stadio II',]
+```
+
+
+```{r}
+indice <- df_seno_stadio_I_II %>% 
+  group_by(ospedale) %>% 
+  summarise(indice = sum(entro_60_giorni == 1, na.rm = TRUE) / n())
+
+indice$indice<-indice$indice*100
+```
+
+```{r}
+
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(indice, aes(x = ospedale, y = indice)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  labs(title = "Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla diagnosi",#MODIFICARE
+       x = "Ospedale", y = "Indicatore") +
+  theme(plot.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  geom_hline(yintercept = ind_tumore_seno, linetype = "dashed", color = "red") +
+  geom_text(aes(label = round(indice, 2)), vjust = -0.5, color = "blue", size = 3.5) +
+  geom_text(aes(x = 1, y = ind_tumore_seno, label = round(ind_tumore_seno, 2)),
+            hjust = -0.2, vjust = 1, color = "red", size = 3.5)
+```
+
+
+# 4. Utilizzare il dataset ottenuto per valutare l’associazione a livello individuale tra il livello di educazione ed il valore dell’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’. Quale misura di effetto è possibile stimare? Calcolate ed interpretate tale misura di effetto grezza. Riportare anche la relativa tabella di contingenza.
+
+
+creazione variabile binaria educazione
+```{r}
+# Eliminazione delle righe con dati mancanti
+#df_seno_stadio_I_II <- na.omit(df_seno_stadio_I_II)
+
+# Conversione della variabile 'educazione' in una variabile binaria
+df_seno_stadio_I_II$education_bin <- ifelse(df_seno_stadio_I_II$education == "low", 0, 1)
+
+df_seno_stadio_I_II <- na.omit(df_seno_stadio_I_II)
+```
+
+In questo caso, stiamo dicendo a R di creare un modello di regressione logistica in cui la variabile dipendente è 'entro_60_giorni' (l'indicatore che vogliamo prevedere) e la variabile indipendente è 'educazione_bin' (la variabile binaria per il livello di educazione). La funzione family = binomial() specifica che vogliamo eseguire una regressione logistica.
+
+```{r}
+# Modello di regressione logistica
+modello_logistico_stadio_I_II <- glm(entro_60_giorni ~ education_bin, family = binomial(), data = df_seno_stadio_I_II)
+
+# Riepilogo del modello
+summary(modello_logistico_stadio_I_II)
+```
+
+
+```{r}
+# Impostazione manuale del valore di educazione_bin a NA per le righe in cui educazione è mancante
+df_seno_stadio_I_II$educazione<-as.factor(df_seno_stadio_I_II$educazione)
+df_seno_stadio_I_II$educazione_bin <- ifelse(is.na(df_seno_stadio_I_II$educazione), NA, ifelse(df_seno_stadio_I_II$educazione == "low", 0, 1))
+
+# Eliminazione delle righe con dati mancanti
+#df_seno_stadio_I_II <- na.omit(df_seno_stadio_I_II)
+
+# Modello di regressione logistica
+modello_logistico <- glm(entro_60_giorni ~ education_bin, family = binomial(), data = df_seno_stadio_I_II)
+
+# Riepilogo del modello
+summary(modello_logistico)
+
+#SBAGLIATO va LETTO CON EXP()
+```
+L'odds ratio calcolato è 0.98, con un intervallo di confidenza al 95% che va da 0.51 a 1.89. Questo indica che non c'è evidenza di un'associazione significativa tra il livello di educazione e l'intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi. L'OR di 0.98 indica che il rapporto tra le probabilità di avere l'intervento entro 60 giorni nel gruppo con livello di educazione "medium/high" rispetto a quello con livello di educazione "no/low" è di 0.98. Tuttavia, essendo l'intervallo di confidenza che include anche il valore 1, non possiamo considerare questo risultato statisticamente significativo.
+```{r}
+# tabella di contingenza
+twoby2(df_seno_stadio_I_II$entro_60_giorni, df_seno_stadio_I_II$education_bin)
+
+epi.2by2(table(df_seno_stadio_I_II$entro_60_giorni, df_seno_stadio_I_II$education_bin), method="cohort.count")
+```
+
+```{r}
+#OPPURE
+df_seno_stadio_I_II_60days<-df_seno_stadio_I_II[df_seno_stadio_I_II$entro_60_giorni==1,]
+
+# Conversione della variabile 'educazione' in una variabile binaria
+df_seno_stadio_I_II_60days$education_bin <- ifelse(df_seno_stadio_I_II_60days$education == "low", 0, 1)
+
+library(dplyr)
+df_seno_stadio_I_II_60days <- merge(df_seno_stadio_I_II_60days, indice, by = "ospedale", all = 'TRUE')
+
+model1<-glm(education_bin~indice,family=binomial,data=df_seno_stadio_I_II_60days)
+summary(model1)
+round(exp(cbind("OR" = coef(model1), confint.default(model1, level = 0.95))),4)
+
+table(df_seno_stadio_I_II_60days$indice, df_seno_stadio_I_II_60days$education_bin)
+
+twoby2(df_seno_stadio_I_II_60days$indice, df_seno_stadio_I_II_60days$education_bin)
+
+epi.2by2(table(df_seno_stadio_I_II_60days$indice, df_seno_stadio_I_II_60days$education_bin), method="cohort.count")
+```
+
+# 5. Calcolate la stessa misura di effetto, questa volta aggiustata per la sola variabile ‘working’, mediante il metodo Mantel Haenszel. Interpretate il risultato.
+```{r}
+library(epitools)
+
+df_seno_stadio_I_II$work_bin <- ifelse(df_seno_stadio_I_II$work == "yes", 1, 0)
+
+# tabella di contingenza
+tab <- table(df_seno_stadio_I_II$education_bin[df_seno_stadio_I_II$work_bin ==1 ],df_seno_stadio_I_II$entro_60_giorni[df_seno_stadio_I_II$work_bin ==1])
+
+epi.2by2(tab, method="cohort.count")
+# Mantel-Haenszel test
+mh_test <- mantelhaen.test(tab)
+mh_test$measure    # odds ratio corretto
+mh_test$conf.low   # limite inferiore dell'intervallo di confidenza al 95%
+mh_test$conf.high  # limite superiore dell'intervallo di confidenza al 95%
+```
+
+
+#6. Stimate l’associazione a livello individuale tra il livello di educazione ed il valore
+dell’indicatore, aggiustata per tutte le variabili disponibili che ritenete opportuno inserire
+come potenziali confondenti, mediante un modello di regressione logistica.
+Interpretate i risultati.
+Su quanti soggetti avete effettuato l’analisi?
+
+```{r}
+model_glm <- glm(entro_60_giorni ~ work_bin, data = df_seno_stadio_I_II, family = binomial())
+exp(cbind("OR" = coef(model_glm), confint.default(model_glm, level = 0.95)))
+
+
+
+library(Matching)
+matched_data <- Match(Y = df_seno_stadio_I_II$entro_60_giorni, Tr = df_seno_stadio_I_II$work_bin, X = df_seno_stadio_I_II$education_bin)
+summary(matched_data)
+
+
+mh_test <- mantelhaen.test(matched_data$Y, matched_data$Tr, strata = matched_data$weights)
+mh_test
+
+
+model_overall <- glm(bronchit ~ factor(hilevel), 
+                     data = bronchit, family = "binomial")
+exp(cbind("OR" = coef(model_overall), confint.default(model_overall, level = 0.95)))
+
+```
+
+
+
+
+
+
+
+
+# 7. Selezionate i record relativi ai tumori al colon e stimate la sopravvivenza a 5 anni.
+```{r}
+df_colon <- subset(df, tipotumore == 'colon')
+
+df_colon$time_d <- as.numeric(as.Date(df_colon$enddate, format = "%Y-%m-%d") - as.Date(df_colon$incidenza, format = "%Y-%m-%d")) #data fine studio - data insorgenza
+
+df_colon <- na.omit(df_colon)
+```
+
+
+```{r}
+library(survival)
+fit<-survfit(Surv(time_d, dead) ~1,data=df_colon)
+summary(fit)
+par(mar=c(4,4,2,2))
+
+
+
+plot(fit, xlab='time (days)', ylab='survival probability')
+title('Kaplan Meier estimate (pooled data)')
+```
+
+```{r}
+#Quanti soggetti sono inclusi nell’analisi?
+nrow(df_colon)
+```
+```{r}
+#Quanti pazienti sono morti nel periodo di interesse?
+nrow(df_colon[df_colon$dead==1,])
+```
+
+
+```{r}
+library(prodlim)
+fit1 <- prodlim(Hist(time_d,dead) ~ 1, data=df_colon)
+plot(fit1)
+abline(h=0.5, col = 'red')
+```
+Mediana di sopravvivenza circa 1400 giorni
+
+# 8. Stimare la di sopravvivenza nei primi 5 anni dalla diagnosi per Stadio e effettuare un test d’ipotesi per verificare se l’azzardo di morte sia diverso per stadio di malattia alla diagnosi.
+
+```{r}
+df_colon <- df_colon[df_colon$Stadio!='',]
+unique(df_colon$Stadio)
+
+```
+
+
+```{r}
+#df_stadio <- df[!is.na(df$Stadio),]
+#df_stadio <- df_stadio[df_stadio$Stadio!='',]
+
+df_colon$time_d <- as.numeric(as.Date(df_colon$enddate, format = "%Y-%m-%d") - as.Date(df_colon$incidenza, format = "%Y-%m-%d")) #data fine studio - data insorgenza
+```
+
+```{r}
+df_colon$Stadio <- as.factor(df_colon$Stadio)
+levels(df_colon$Stadio)
+```
+
+
+```{r}
+fit<-survfit(Surv(time_d, dead) ~Stadio,data=df_colon)
+summary(fit)
+par(mar=c(4,4,2,2))
+# Plot del grafico con colori diversi
+plot(fit, xlab = 'Time (days)', ylab = 'Survival probability', col = c('purple', 'blue', 'green', 'orange'))
+abline(h=0.5, col = 'red')
+
+# Aggiunta della legenda
+legend('bottomleft', legend = levels(df_colon$Stadio), col = c('purple', 'blue', 'green', 'orange'), lty = 1, cex = 0.8)
+
+# Aggiunta del titolo
+title('Kaplan Meier estimate by Stadio')
+```
+
+```{r}
+str(df_colon)
+```
+
+```{r}
+haz1<-fit['Stadio=Stadio I']$n.event/fit['Stadio=Stadio I']$n.risk
+haz2<-fit['Stadio=Stadio II']$n.event/fit['Stadio=Stadio II']$n.risk
+haz3<-fit['Stadio=Stadio III']$n.event/fit['Stadio=Stadio III']$n.risk
+haz4<-fit['Stadio=Stadio IV']$n.event/fit['Stadio=Stadio IV']$n.risk
+haz1
+haz2
+haz3
+haz4
+```
+
+
+```{r}
+# Conteggio delle frequenze osservate
+observed <- table(df_stadio$Stadio, df_stadio$dead)
+
+# Calcolo delle frequenze attese
+expected <- chisq.test(observed)$expected
+
+# Esecuzione del test del chi-quadrato
+result <- chisq.test(observed, correct = FALSE)
+result
+```
+
+
+L'ipotesi nulla viene rigettata e si conclude che ci sono differenze significative tra i gruppi.
+Verifico allora tra quali coppie di gruppi esiste questa differenza significativa
+
+```{r}
+pairwise <- pairwise.prop.test(observed, p.adjust.method = "bonferroni")
+pairwise
+```
+
+Si nota come tra lo Stadio IV e tutti gli altri stadi ci siano differenze significative notevoli; anche tra lo Stadio III e i primi due si nota una differenza significativa notevole. Solamente tra Stadio I e Stadio II non si notano differenze significative
+
+
+```{r}
+# Adattamento del modello ANOVA
+anova_model <- aov(c(haz1, haz2, haz3, haz4) ~ c(rep("Stadio I", length(haz1)), rep("Stadio II", length(haz2)), rep("Stadio III", length(haz3)), rep("Stadio IV", length(haz4))))
+
+# Stampa dei risultati dell'ANOVA
+summary(anova_model)
+```
+
+Il valore di p-value molto basso ci conduce a non accettare l'ipotesi nulla concludendo che esistono differenze significative tra i gruppi.
+Si propone un test di Tukey post-hoc per verificare le differenze tra singoli gruppi.
+
+```{r}
+# Confronti tra coppie di gruppi
+tukey_results <- TukeyHSD(anova_model)
+
+# Stampa dei risultati del test di Tukey
+print(tukey_results)
+```
+
+Si notano differenze significative tra tutti gli stadi, tranne che per la coppia Stadio I e Stadio II.
+
+```{r}
+length(check)
+length(fit['Stadio=Stadio I']$time)
+```
+
+
+```{r}
+check<- log(-log(fit['Stadio=Stadio I']$surv))
+plot(fit['Stadio=Stadio I']$time, check, type='l', xlab='time', ylab='log( -log( S(t) ) )', ylim=c(-7,1.8))
+points(fit['Stadio=Stadio I']$time, check)
+
+check<- log(-log(fit['Stadio=Stadio II']$surv))
+lines( fit['Stadio=Stadio II']$time, check, type='l', lwd=2)
+points(fit['Stadio=Stadio II']$time, check)
+
+check<- log(-log(fit['Stadio=Stadio III']$surv))
+lines( fit['Stadio=Stadio III']$time, check, type='l', lwd=2)
+points(fit['Stadio=Stadio III']$time, check)
+
+check<- log(-log(fit['Stadio=Stadio IV']$surv))
+lines( fit['Stadio=Stadio IV']$time, check, type='l', lwd=2)
+points(fit['Stadio=Stadio IV']$time, check)
+```
+
+In teoria la curva con valori più elevati è lo Stadio IV
+
+# 9. Applicare un modello per valutare l’associazione tra sesso e mortalità e interpretare la misura di effetto stimata.
+
+```{r}
+model<-glm(dead~sex,family=binomial,data=df_colon)
+summary(model)
+```
+
+In base al p-value del coefficiente della variabile binaria Sex per il livello Male si può affermare la sua significatività per la variabile morte quindi è presente una forte associazione tra le due variabili. Probabilmente il genere maschile ha mortalità maggiore a quello femminile per quanto riguarda il tumore al colon.
+
+
+```{r}
+OR <- exp(coef(model))
+OR
+```
+
+L'OR stimato dal modello sarà un valore maggiore di 1 se i pazienti di sesso maschile sono più probabili di morire rispetto ai pazienti di sesso femminile, e un valore inferiore a 1 se i pazienti di sesso maschile sono meno probabili di morire rispetto ai pazienti di sesso femminile. Un OR di 1 indica che non vi è alcuna differenza tra i due gruppi di sesso. OR pari a 1.54 quindi i pazienti di sesso maschile hanno più probabilità di morire per tumore al colon rispetto a quelli di sesso femminile
+
+Inoltre, il modello restituisce un valore di p che indica se l'associazione tra sesso e mortalità è statisticamente significativa. Se il valore di p è inferiore al livello di significatività scelto (ad esempio 0.05), si può concludere che l'associazione tra sesso e mortalità è statisticamente significativa. In questo caso l'associazione tra sesso e mortalità è statisticamente significativa.
+
+Infine, il modello fornisce anche l'intervallo di confidenza del 95% per l'OR stimato, che indica l'intervallo di valori entro cui si troverà il vero valore dell'OR con una probabilità del 95%. Se l'intervallo di confidenza non include il valore 1, si può concludere che l'associazione tra sesso e mortalità è statisticamente significativa. Dallo script successivo si nota come l'IC non include il valore 1 quindi associazione tra sesso e mortalità statisticamente significatova.
+
+```{r}
+# tabella di contingenza
+library(epiR)
+library(epitools)
+twoby2(df_colon$dead, df_colon$sex)
+
+epi.2by2(table(df_colon$dead, df_colon$sex), method="cohort.count")
+```
+
+Odds ratio pari a 1.54 con IC pari a (1.24, 1.91)
+
+
+# 10. Quali variabili sono associate alla mortalità? Riportare le relative stime di effetto con gli intervalli di confidenza.
+
+```{r}
+model <- glm(dead ~smoke+married+kids+work+education+age,family = binomial(), data=df_colon)
+summary(model)
+```
+
+```{r}
+OR <- exp(model$coefficients)
+round(exp(cbind("OR" = coef(model), confint.default(model, level = 0.95))),4)
+```
+
+Si nota che le variabili 'smoke' e 'age' risultano significativamente associate con il target 'dead' sia analizzando la significativita' dei coefficienti del modello che osservando gli intervalli di confidenza (non presentano il valore 1 nell'IC). Si puo' quindi supporre che chi fuma ha una probabilita' del 46% maggiore di morire di tumore al colon rispetto a chi non fuma; mentre chi ha un'eta' piu' anziana ha una probabilita' dell'8% maggiore di morire di tumore al colon.
+Si deve valutare se 'education' si tratta di una variabile confodente o meno.
+
+
+# 11. Valutare la presenza di confondenti e/o modificatori di effetto tra le variabili disponibili nel German health register e nel registro tumori nella valutazione dell’associazione tra sesso e mortalità. Se identificate un’interazione tra sesso e un’altra variabile riportare le stime di effetto per maschi e femmine separatamente e commentare il tipo di interazione trovato.
+
+CONFONDIMENTO SI VALUTA ANALIZZANDO RAPPORTO TRA OR GREZZO E OR AGGIUSTATO --> SE VICINO A 1 VARIABILE NON CONFONDENTE
+INTERAZIONE SI VALUTA CON TEST DI OMOGENEITA (SE P-VALUE BASSO C'E INTERAZIONE) O CON TEST ANOVA
+
+```{r}
+model<-glm(dead~sex,family=binomial,data=df_colon)
+summary(model)
+```
+
+ODDS RATIO GREZZO TRA MORTE E SESSO
+
+```{r}
+OR <- exp(model$coefficients)
+round(exp(cbind("OR" = coef(model), confint.default(model, level = 0.95))),4)
+```
+
+
+```{r}
+library(epitools)
+
+cont_table <- table(dead = df_colon$dead, 
+                    sex = df_colon$sex, 
+                    smoke = df_colon$smoke)
+
+strat<-epi.2by2(dat=cont_table , method="cohort.count")
+strat$massoc.detail$OR.strata.wald
+
+strat$massoc.detail$OR.homog.brday
+
+strat
+```
+
+Si ottengono OR grezzo pari a 1.54 e OR aggiustato pari a 1.53 --> quindi rapporto tra OR pari a 1.01 significa che variabile 'smoke' non e' una confondente
+Inoltre si accetta l'ipotesi nulla che gli OR strato-specifici sono uguali dato che H-M test of homogeneity of ORs ha p-value pari a 0.632
+
+
+Si valuta se variabile 'MARRIED' e' confondente
+
+```{r}
+cont_table <- table(dead = df_colon$dead, 
+                    sex = df_colon$sex, 
+                    married = df_colon$married)
+
+strat<-epi.2by2(dat=cont_table , method="cohort.count")
+strat$massoc.detail$OR.strata.wald
+
+strat$massoc.detail$OR.homog.brday
+
+strat
+```
+
+Rapporto tra OR pari a 1 quindi MARRIED non confondente
+
+Interazione non significativa, quindi 'MARRIED' non modificatore d'effetto
+
+
+Si valuta se variabile 'KIDS' e' confondente
+
+```{r}
+cont_table <- table(dead = df_colon$dead, 
+                    sex = df_colon$sex, 
+                    kids = df_colon$kids)
+
+strat<-epi.2by2(dat=cont_table , method="cohort.count")
+strat$massoc.detail$OR.strata.wald
+
+strat$massoc.detail$OR.homog.brday
+
+strat
+```
+
+Rapporto tra OR pari a 1 quindi KIDS non confondente
+
+Interazione non significativa, quindi 'KIDS' non modificatore d'effetto
+
+
+Si valuta se variabile 'WORK' e' confondente
+
+```{r}
+cont_table <- table(dead = df_colon$dead, 
+                    sex = df_colon$sex, 
+                    work = df_colon$work)
+
+strat<-epi.2by2(dat=cont_table , method="cohort.count")
+strat$massoc.detail$OR.strata.wald
+
+strat$massoc.detail$OR.homog.brday
+
+strat
+```
+
+Rapporto tra OR pari a 1 quindi WORK non confondente
+
+Interazione non significativa, quindi 'WORK' non modificatore d'effetto
+
+
+Si valuta se variabile 'EDUCATION' e' confondente
+
+```{r}
+cont_table <- table(dead = df_colon$dead, 
+                    sex = df_colon$sex, 
+                    education = df_colon$education)
+
+strat<-epi.2by2(dat=cont_table , method="cohort.count")
+strat$massoc.detail$OR.strata.wald
+
+strat$massoc.detail$OR.homog.brday
+
+strat
+```
+
+Rapporto tra OR pari a 1.01 quindi EDUCATION non confondente
+
+Interazione significativa, quindi EDUCATION e' modificatore d'effetto --> si valuta anova
+
+```{r}
+model_adj<-glm(dead~ factor(sex) + factor(education),family=binomial,data=df_colon)
+exp(cbind("OR" = coef(model_adj), confint.default(model_adj, level = 0.95)))
+
+model_int<-glm(dead~ factor(sex)*factor(education),family=binomial,data=df_colon)
+exp(cbind("OR" = coef(model_int), confint.default(model_int, level = 0.95)))
+
+anova(model_adj, model_int, test = "LRT")
+```
+
+
+```{r}
+# Si definisce il modello di regressione includendo sesso, education e l'interazione tra sesso ed education
+#modello <- glm(mortalità ~ sesso * education, data = dati, family = binomial())
+
+# Si ottengono le stime di effetto per maschi e femmine separatamente
+effetti_per_sesso <- predict(model_int, newdata = data.frame(sex = c("Female", "Male"), education = c("low", "medium/high")), type = "response")
+
+# Si commenta il tipo di interazione trovato
+if (summary(model_int)$coefficients[4,4] < 0.05) {
+  cat("Si riscontra una significativa interazione tra sesso ed education sulla mortalità.\n")
+  effetti_per_sesso
+} else {
+  cat("Non si riscontra una significativa interazione tra sesso ed education sulla mortalità.\n")
+}
+
+```
+
+
+```{r}
+# Si calcolano le stime di effetto per maschi e femmine separatamente
+effetto_maschi <- predict(model_adj, newdata = data.frame(sex = 'Male', education = df_colon$education))
+effetto_femmine <- predict(model_adj, newdata = data.frame(sex = 'Female', education = df_colon$education))
+
+# Si analizzano le stime di effetto per i diversi livelli di istruzione
+effetto_per_istruzione <- aggregate(cbind(effetto_maschi, effetto_femmine), by = list(df_colon$education), FUN = mean)
+
+# Si commenta il tipo di interazione trovato
+if (effetto_per_istruzione[1, "effetto_maschi"] > effetto_per_istruzione[nrow(effetto_per_istruzione), "effetto_maschi"]) {
+  cat("L'effetto di essere maschi sulla mortalità è maggiore tra coloro che hanno un basso livello di istruzione rispetto a coloro che hanno un alto livello di istruzione.\n")
+} else if (effetto_per_istruzione[1, "effetto_maschi"] < effetto_per_istruzione[nrow(effetto_per_istruzione), "effetto_maschi"]) {
+  cat("L'effetto di essere maschi sulla mortalità è minore tra coloro che hanno un basso livello di istruzione rispetto a coloro che hanno un alto livello di istruzione.\n")
+} else {
+  cat("Non si riscontra alcuna differenza significativa nelle stime di effetto tra i diversi livelli di istruzione.\n")
+}
+```
+
+
+```{r}
+effetto_per_istruzione
+```
+Il risultato riporta l'effetto del sesso (maschi vs femmine) sulla mortalità, suddiviso per i diversi livelli di istruzione (low vs medium/high).
+
+In particolare, per i soggetti con basso livello di istruzione, si osserva un effetto positivo per i maschi (effetto_maschi = 0.336), ovvero una maggiore mortalità rispetto alle femmine (effetto_femmine = -0.086).
+D'altra parte, per i soggetti con medio/alto livello di istruzione, l'effetto del sesso sulla mortalità è ancora maggiore per i maschi (effetto_maschi = 0.963), ma anche per le femmine (effetto_femmine = 0.541), evidenziando una maggiore omogeneità nell'effetto del sesso sulla mortalità tra i soggetti con livelli di istruzione più elevati.
+
+In sintesi, l'analisi mostra che l'effetto del sesso sulla mortalità è modificato dal livello di istruzione dei soggetti, evidenziando un'interazione significativa tra le due variabili.
+
+
+Si valuta se variabile 'AGE' e' confondente
+```{r}
+library(epiR)
+library(epitools)
+cont_table <- table(dead = df_colon$dead, 
+                    sex = df_colon$sex, 
+                    age = df_colon$age)
+
+strat<-epi.2by2(dat=cont_table , method="cohort.count")
+strat$massoc.detail$OR.strata.wald
+
+strat$massoc.detail$OR.homog.brday
+
+strat
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+# 12. A seguito delle considerazioni effettuate nei punti precedenti scegliete un modello finale per valutare i fattori di rischio della mortalità dopo diagnosi di tumore al colon e commentate i risultati.
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

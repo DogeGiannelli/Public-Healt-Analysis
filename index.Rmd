@@ -9,6 +9,23 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r}
+set.seed(500)
+
+Sys.setenv(TZ='GMT') # imposto la time zone
+
+packages <- c("dplyr",) # librerie
+
+installed_packages <- packages %in% rownames(installed.packages())
+if (any(installed_packages == FALSE)) {
+  install.packages(packages[!installed_packages])
+}
+
+# Packages loading
+invisible(lapply(packages, library, character.only = TRUE))
+```
+
+
+```{r}
 cancer <- read.csv('Dataset/Cancerregister.csv', sep = ';')
 death <- read.csv('Dataset/Deathregister.csv', sep = ';')
 germanH <- read.csv('Dataset/GermanH.csv', sep = ';')

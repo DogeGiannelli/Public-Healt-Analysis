@@ -290,14 +290,6 @@ ratio_age --> 1.005951 non confondente
 
 
 
-
-
-
-
-
-
-
-
 # 7. Selezionate i record relativi ai tumori al colon e stimate la sopravvivenza a 5 anni.
 ```{r}
 df_colon <- subset(df, tipotumore == 'colon')

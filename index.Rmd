@@ -15,6 +15,10 @@ germanH <- read.csv('Dataset/GermanH.csv', sep = ';')
 sdo <- read.csv('Dataset/SDO.csv', sep = ';')
 ```
 
+```{r}
+library(dplyr)
+```
+
 
 # 1. Esaminare i dati e riportare le statistiche descrittive in una tabella per ciascun dataset. Per le date riportare data minima e data massima. Fare attenzione alla possibilità di dati mancanti, incongruenze tra date, record ripetuti che potrebbero creare problemi in fase di linkage e analisi. I record con dati ripetuti o incongruenze tra date (eg. Data trattamento precedente alla data d’incidenza) devono essere segnalati nel report e poi eliminati per le analisi successive.
 
@@ -32,62 +36,50 @@ summary(germanH)
 summary(sdo)
 ```
 
-```{r}
-library(dplyr)
-df <- merge(cancer, death, by = "idnum", all = 'TRUE') %>% 
-             merge(germanH, by = "idnum", all = 'TRUE') %>% 
-             merge(sdo, by = "idnum", all = 'TRUE')
-```
-
 ### VALUTO DATI RIPETUTI
 
-```{r}
-n_distinct(df$idnum)
-```
 
 ```{r}
-duplicated_rows <- duplicated(df$idnum)
+duplicated_rows <- duplicated(cancer)
+cancer[duplicated_rows, ]
 
-# visualizza le righe duplicate
-df[duplicated_rows, ]
+duplicated_rows <- duplicated(death)
+death[duplicated_rows, ]
+
+duplicated_rows <- duplicated(germanH)
+germanH[duplicated_rows, ]
+
+duplicated_rows <- duplicated(sdo)
+sdo[duplicated_rows, ]
 ```
 
+3 righe duplicate per i pazienti 192, 363, 1933 nel dataset cancer --> le elimino
 
 ```{r}
-df[df$idnum == 192, ]
-df[df$idnum == 363, ]
-df[df$idnum == 1933, ]
+cancer <- unique(cancer)
 
 ```
 
-Dati ripetuti per i pazienti 192, 363, 1933 --> mantengo solo una osservazione
-
-```{r}
-df <- unique(df)
-
-```
 
 ### VALUTO INCONGRUENZA TRA DATE
 
+
 ```{r}
-df$incidenza <- as.Date(df$incidenza, format="%d/%m/%Y")
-df$dataprestazione <- as.Date(df$dataprestazione, format="%d/%m/%Y")
-df$dimissione <- as.Date(df$dimissione, format="%d/%m/%Y")
-df$enddate <- as.Date(df$enddate, format="%Y-%m-%d")
+cancer$incidenza <- as.Date(cancer$incidenza, format="%d/%m/%Y")
+sdo$dataprestazione <- as.Date(sdo$dataprestazione, format="%d/%m/%Y")
+sdo$dimissione <- as.Date(sdo$dimissione, format="%d/%m/%Y")
+death$enddate <- as.Date(death$enddate, format="%Y-%m-%d")
 
 ```
 
 
 ```{r}
 # Selezione delle righe che soddisfano la condizione
-df_non_soddisfano <- subset(df, dataprestazione < incidenza) # 0 obs
 
-df_non_soddisfano1 <- subset(df, dimissione < dataprestazione) # 42 obs
-
-df_non_soddisfano2 <- subset(df, dimissione < incidenza) # 0 obs
+df_non_soddisfano <- subset(sdo, dimissione < dataprestazione) # 42 obs
 
 # elimino osservazioni da df
-df <- anti_join(df, df_non_soddisfano1, by = "idnum")
+sdo <- anti_join(sdo, df_non_soddisfano, by = "idnum")
 
 ```
 

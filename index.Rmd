@@ -74,7 +74,6 @@ sdo[duplicated_rows, ]
 
 ```{r}
 cancer <- unique(cancer)
-
 ```
 
 
@@ -291,12 +290,25 @@ ratio_age --> 1.005951 non confondente
 
 
 # 7. Selezionate i record relativi ai tumori al colon e stimate la sopravvivenza a 5 anni.
+
+```{r}
+library(dplyr)
+df <- merge(cancer, death, by = "idnum", all = 'TRUE') %>% 
+             merge(germanH, by = "idnum", all = 'TRUE') %>% 
+             merge(sdo, by = "idnum", all = 'TRUE')
+```
+
+
 ```{r}
 df_colon <- subset(df, tipotumore == 'colon')
 
+#mantengo solo le osservazioni che riportano la data di fine studio!
+colSums(is.na(df_colon))
+df_colon <- df_colon[complete.cases(df_colon$enddate),]
+colSums(is.na(df_colon))
+
 df_colon$time_d <- as.numeric(as.Date(df_colon$enddate, format = "%Y-%m-%d") - as.Date(df_colon$incidenza, format = "%Y-%m-%d")) #data fine studio - data insorgenza
 
-df_colon <- na.omit(df_colon)
 ```
 
 
@@ -308,24 +320,33 @@ par(mar=c(4,4,2,2))
 
 
 
-plot(fit, xlab='time (days)', ylab='survival probability')
-title('Kaplan Meier estimate (pooled data)')
-```
+#plot(fit, xlab='time (days)', ylab='survival probability')
+#title('Kaplan Meier estimate (pooled data)')
 
+par(mar = c(5, 5, 4, 2) + 0.1, mgp = c(3, 0.8, 0), cex.axis = 0.8)
+plot(fit, xlab = "Time (days)", ylab = "Survival probability", 
+     main = "Kaplan-Meier Estimate (Pooled Data)", 
+     lwd = 1.5, col = "darkblue", conf.int = TRUE, conf.int.style = "step",
+     conf.int.alpha = 0.2, lty.ci = 2, xlim = c(0, 1825), ylim = c(0, 1))
+
+# Add legend
+legend("bottomleft", legend = c("Survival probability", "95% Confidence Interval"), 
+       col = c("darkblue", "darkblue"), lty = c(1, 2), lwd = 1.5, cex = 0.8)
+```
+###Quanti soggetti sono inclusi nell’analisi?
 ```{r}
-#Quanti soggetti sono inclusi nell’analisi?
 nrow(df_colon)
 ```
+
+###Quanti pazienti sono morti nel periodo di interesse?
 ```{r}
-#Quanti pazienti sono morti nel periodo di interesse?
 nrow(df_colon[df_colon$dead==1,])
 ```
-
 
 ```{r}
 library(prodlim)
 fit1 <- prodlim(Hist(time_d,dead) ~ 1, data=df_colon)
-plot(fit1)
+plot(fit1, xlim = c(0, 1825))
 abline(h=0.5, col = 'red')
 ```
 Mediana di sopravvivenza circa 1400 giorni
@@ -335,7 +356,6 @@ Mediana di sopravvivenza circa 1400 giorni
 ```{r}
 df_colon <- df_colon[df_colon$Stadio!='',]
 unique(df_colon$Stadio)
-
 ```
 
 
@@ -343,7 +363,7 @@ unique(df_colon$Stadio)
 #df_stadio <- df[!is.na(df$Stadio),]
 #df_stadio <- df_stadio[df_stadio$Stadio!='',]
 
-df_colon$time_d <- as.numeric(as.Date(df_colon$enddate, format = "%Y-%m-%d") - as.Date(df_colon$incidenza, format = "%Y-%m-%d")) #data fine studio - data insorgenza
+#df_colon$time_d <- as.numeric(as.Date(df_colon$enddate, format = "%Y-%m-%d") - as.Date(df_colon$incidenza, format = "%Y-%m-%d")) #data fine studio - data insorgenza
 ```
 
 ```{r}
@@ -367,9 +387,6 @@ legend('bottomleft', legend = levels(df_colon$Stadio), col = c('purple', 'blue',
 title('Kaplan Meier estimate by Stadio')
 ```
 
-```{r}
-str(df_colon)
-```
 
 ```{r}
 haz1<-fit['Stadio=Stadio I']$n.event/fit['Stadio=Stadio I']$n.risk
@@ -385,7 +402,7 @@ haz4
 
 ```{r}
 # Conteggio delle frequenze osservate
-observed <- table(df_stadio$Stadio, df_stadio$dead)
+observed <- table(df_colon$Stadio, df_colon$dead)
 
 # Calcolo delle frequenze attese
 expected <- chisq.test(observed)$expected
@@ -425,48 +442,42 @@ tukey_results <- TukeyHSD(anova_model)
 # Stampa dei risultati del test di Tukey
 print(tukey_results)
 ```
-
 Si notano differenze significative tra tutti gli stadi, tranne che per la coppia Stadio I e Stadio II.
-
-```{r}
-length(check)
-length(fit['Stadio=Stadio I']$time)
-```
 
 
 ```{r}
 check<- log(-log(fit['Stadio=Stadio I']$surv))
-plot(fit['Stadio=Stadio I']$time, check, type='l', xlab='time', ylab='log( -log( S(t) ) )', ylim=c(-7,1.8))
-points(fit['Stadio=Stadio I']$time, check)
+plot(fit['Stadio=Stadio I']$time, check, type='l', xlab='time', ylab='log( -log( S(t) ) )', ylim=c(-7,1.8), col = 'purple')
+points(fit['Stadio=Stadio I']$time, check, col = 'purple')
 
 check<- log(-log(fit['Stadio=Stadio II']$surv))
-lines( fit['Stadio=Stadio II']$time, check, type='l', lwd=2)
-points(fit['Stadio=Stadio II']$time, check)
+lines(fit['Stadio=Stadio II']$time, check, type='l', lwd=2, col = 'blue')
+points(fit['Stadio=Stadio II']$time, check, col = 'blue')
 
 check<- log(-log(fit['Stadio=Stadio III']$surv))
-lines( fit['Stadio=Stadio III']$time, check, type='l', lwd=2)
-points(fit['Stadio=Stadio III']$time, check)
+lines( fit['Stadio=Stadio III']$time, check, type='l', lwd=2, col = 'green')
+points(fit['Stadio=Stadio III']$time, check, col = 'green')
 
 check<- log(-log(fit['Stadio=Stadio IV']$surv))
-lines( fit['Stadio=Stadio IV']$time, check, type='l', lwd=2)
-points(fit['Stadio=Stadio IV']$time, check)
+lines( fit['Stadio=Stadio IV']$time, check, type='l', lwd=2, col = 'orange')
+points(fit['Stadio=Stadio IV']$time, check, col = 'orange')
 ```
 
-In teoria la curva con valori più elevati è lo Stadio IV
+In teoria la curva che riporta l'azzardo più elevato è relativa ai pazienti in studio con tumore al colon allo Stadio IV
 
 # 9. Applicare un modello per valutare l’associazione tra sesso e mortalità e interpretare la misura di effetto stimata.
 
 ```{r}
-model<-glm(dead~sex,family=binomial,data=df_colon)
-summary(model)
+model_colon_sex<-glm(dead~sex,family=binomial,data=df_colon)
+summary(model_colon_sex)
 ```
 
 In base al p-value del coefficiente della variabile binaria Sex per il livello Male si può affermare la sua significatività per la variabile morte quindi è presente una forte associazione tra le due variabili. Probabilmente il genere maschile ha mortalità maggiore a quello femminile per quanto riguarda il tumore al colon.
 
 
 ```{r}
-OR <- exp(coef(model))
-OR
+exp(cbind("OR" = coef(model_colon_sex), confint.default(model_colon_sex, level = 0.95)))
+
 ```
 
 L'OR stimato dal modello sarà un valore maggiore di 1 se i pazienti di sesso maschile sono più probabili di morire rispetto ai pazienti di sesso femminile, e un valore inferiore a 1 se i pazienti di sesso maschile sono meno probabili di morire rispetto ai pazienti di sesso femminile. Un OR di 1 indica che non vi è alcuna differenza tra i due gruppi di sesso. OR pari a 1.54 quindi i pazienti di sesso maschile hanno più probabilità di morire per tumore al colon rispetto a quelli di sesso femminile
@@ -475,14 +486,6 @@ Inoltre, il modello restituisce un valore di p che indica se l'associazione tra 
 
 Infine, il modello fornisce anche l'intervallo di confidenza del 95% per l'OR stimato, che indica l'intervallo di valori entro cui si troverà il vero valore dell'OR con una probabilità del 95%. Se l'intervallo di confidenza non include il valore 1, si può concludere che l'associazione tra sesso e mortalità è statisticamente significativa. Dallo script successivo si nota come l'IC non include il valore 1 quindi associazione tra sesso e mortalità statisticamente significatova.
 
-```{r}
-# tabella di contingenza
-library(epiR)
-library(epitools)
-twoby2(df_colon$dead, df_colon$sex)
-
-epi.2by2(table(df_colon$dead, df_colon$sex), method="cohort.count")
-```
 
 Odds ratio pari a 1.54 con IC pari a (1.24, 1.91)
 
@@ -490,13 +493,12 @@ Odds ratio pari a 1.54 con IC pari a (1.24, 1.91)
 # 10. Quali variabili sono associate alla mortalità? Riportare le relative stime di effetto con gli intervalli di confidenza.
 
 ```{r}
-model <- glm(dead ~smoke+married+kids+work+education+age,family = binomial(), data=df_colon)
-summary(model)
+model_colon_mortality <- glm(dead ~smoke+married+kids+work+education+age,family = binomial(), data=df_colon)
+summary(model_colon_mortality)
 ```
 
 ```{r}
-OR <- exp(model$coefficients)
-round(exp(cbind("OR" = coef(model), confint.default(model, level = 0.95))),4)
+round(exp(cbind("OR" = coef(model_colon_mortality), confint.default(model_colon_mortality, level = 0.95))),4)
 ```
 
 Si nota che le variabili 'smoke' e 'age' risultano significativamente associate con il target 'dead' sia analizzando la significativita' dei coefficienti del modello che osservando gli intervalli di confidenza (non presentano il valore 1 nell'IC). Si puo' quindi supporre che chi fuma ha una probabilita' del 46% maggiore di morire di tumore al colon rispetto a chi non fuma; mentre chi ha un'eta' piu' anziana ha una probabilita' dell'8% maggiore di morire di tumore al colon.

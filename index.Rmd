@@ -128,6 +128,7 @@ df_rl <- merge(cancer, sdo, by = "idnum", all = 'TRUE') %>%
 
 
 
+
 ### estraggo porzione di dataset d'interesse
 ```{r}
 df_seno <- subset(df_rl, tipotumore == 'seno' & Prestazione == 'chirurgica' & sex=='Female' & (df_rl$Stadio == 'Stadio I' | df_rl$Stadio == 'Stadio II'))
@@ -190,13 +191,13 @@ indice$indice<-indice$indice*100
 ```{r}
 library(ggplot2)
 ggplot(indice, aes(x = ospedale, y = indice)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_bar(stat = "identity", fill = "#8bc34a") +
   labs(title = "Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla diagnosi",#MODIFICARE
        x = "Ospedale", y = "Indicatore") +
   theme(plot.title = element_text(hjust = 0.5),
         axis.text.x = element_text(angle = 45, hjust = 1)) +
   geom_hline(yintercept = ind_tumore_seno, linetype = "dashed", color = "red") +
-  geom_text(aes(label = round(indice, 2)), vjust = -0.5, color = "blue", size = 3.5) +
+  geom_text(aes(label = round(indice, 2)), vjust = -0.5, color = "black", size = 3.5) +
   geom_text(aes(x = 1, y = ind_tumore_seno, label = round(ind_tumore_seno, 2)),
             hjust = -0.2, vjust = 1, color = "red", size = 3.5)
 ```

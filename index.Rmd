@@ -13,7 +13,7 @@ set.seed(500)
 
 Sys.setenv(TZ='GMT') # imposto la time zone
 
-packages <- c("dplyr",'epiR','epitools','ggplot2') # librerie
+packages <- c("dplyr",'epiR','epitools','ggplot2','caret') # librerie
 
 installed_packages <- packages %in% rownames(installed.packages())
 if (any(installed_packages == FALSE)) {
@@ -32,29 +32,42 @@ germanH <- read.csv('Dataset/GermanH.csv', sep = ';')
 sdo <- read.csv('Dataset/SDO.csv', sep = ';')
 ```
 
-```{r}
-library(dplyr)
-```
-
 
 # 1. Esaminare i dati e riportare le statistiche descrittive in una tabella per ciascun dataset. Per le date riportare data minima e data massima. Fare attenzione alla possibilità di dati mancanti, incongruenze tra date, record ripetuti che potrebbero creare problemi in fase di linkage e analisi. I record con dati ripetuti o incongruenze tra date (eg. Data trattamento precedente alla data d’incidenza) devono essere segnalati nel report e poi eliminati per le analisi successive.
 
+```{r}
+#cancer 
+cancer$Stadio<-as.factor(cancer$Stadio)
+cancer$tipotumore<-as.factor(cancer$tipotumore)
+cancer$geneticm<-as.factor(cancer$geneticm)
+cancer$incidenza <- as.Date(cancer$incidenza, format="%d/%m/%Y")
+#death
+death$dead<-as.factor(death$dead)
+death$enddate <- as.Date(death$enddate, format="%Y-%m-%d")
+#german
+germanH$smoke<-as.factor(germanH$smoke)
+germanH$sex<-as.factor(germanH$sex)
+germanH$married<-as.factor(germanH$married)
+germanH$kids<-as.factor(germanH$kids)
+germanH$work<-as.factor(germanH$work)
+germanH$education<-as.factor(germanH$education)
+
+#sdo
+sdo$Prestazione<-as.factor(sdo$Prestazione)
+sdo$dataprestazione <- as.Date(sdo$dataprestazione, format="%d/%m/%Y")
+sdo$dimissione <- as.Date(sdo$dimissione, format="%d/%m/%Y")
+```
+
 
 ```{r}
-cancer_sum <- as.data.frame(summary(cancer))
-#eath_sum <- as.data.frame(summary(death))
-#erman_sum <- as.data.frame(summary(germanH))
-#do_sum <- as.data.frame(summary(sdo))
-
-
 summary(cancer)
 summary(death)
 summary(germanH)
 summary(sdo)
 ```
 
-### VALUTO DATI RIPETUTI
 
+### VALUTO DATI RIPETUTI
 
 ```{r}
 duplicated_rows <- duplicated(cancer)
@@ -80,18 +93,9 @@ cancer <- unique(cancer)
 ### VALUTO INCONGRUENZA TRA DATE
 
 
-```{r}
-cancer$incidenza <- as.Date(cancer$incidenza, format="%d/%m/%Y")
-sdo$dataprestazione <- as.Date(sdo$dataprestazione, format="%d/%m/%Y")
-sdo$dimissione <- as.Date(sdo$dimissione, format="%d/%m/%Y")
-death$enddate <- as.Date(death$enddate, format="%Y-%m-%d")
-
-```
-
 
 ```{r}
 # Selezione delle righe che soddisfano la condizione
-
 df_non_soddisfano <- subset(sdo, dimissione < dataprestazione) # 42 obs
 
 # elimino osservazioni da df
@@ -121,6 +125,8 @@ Per effettuare questi passaggi, puoi utilizzare diverse librerie di R, come ad e
 df_rl <- merge(cancer, sdo, by = "idnum", all = 'TRUE') %>% 
              merge(germanH, by = "idnum", all = 'TRUE')
 ```
+
+
 
 
 ### estraggo porzione di dataset d'interesse

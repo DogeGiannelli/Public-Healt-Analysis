@@ -128,7 +128,6 @@ df_rl <- merge(cancer, sdo, by = "idnum", all = 'TRUE') %>%
 
 
 
-
 ### estraggo porzione di dataset d'interesse
 ```{r}
 df_seno <- subset(df_rl, tipotumore == 'seno' & Prestazione == 'chirurgica' & sex=='Female' & (df_rl$Stadio == 'Stadio I' | df_rl$Stadio == 'Stadio II'))

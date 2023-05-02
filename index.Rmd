@@ -54,6 +54,7 @@ germanH$education<-as.factor(germanH$education)
 
 #sdo
 sdo$Prestazione<-as.factor(sdo$Prestazione)
+sdo$ospedale<-as.factor(sdo$ospedale)
 sdo$dataprestazione <- as.Date(sdo$dataprestazione, format="%d/%m/%Y")
 sdo$dimissione <- as.Date(sdo$dimissione, format="%d/%m/%Y")
 ```

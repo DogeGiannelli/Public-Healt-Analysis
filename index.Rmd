@@ -234,6 +234,8 @@ tab <- table(df_seno$entro_60_giorni, df_seno$education_bin, df_seno$work_bin)
 tab
 epi.2by2(tab, method="cohort.count")
 ```
+L'OR tra l’indicatore e "education_bin", dopo l'aggiustamento per la variabile "working" tramite il metodo Mantel-Haenszel, è pari a 0.98.
+Dato il rapporto tra OR grezzo e OR M-H  pari a 1 si può affermare che “working” non è una variabile confondente.
 
 
 #6. Stimate l’associazione a livello individuale tra il livello di educazione ed il valore

@@ -33,7 +33,6 @@ sdo <- read.csv('Dataset/SDO.csv', sep = ';')
 ```
 
 
-
 # 1. Esaminare i dati e riportare le statistiche descrittive in una tabella per ciascun dataset. Per le date riportare data minima e data massima. Fare attenzione alla possibilità di dati mancanti, incongruenze tra date, record ripetuti che potrebbero creare problemi in fase di linkage e analisi. I record con dati ripetuti o incongruenze tra date (eg. Data trattamento precedente alla data d’incidenza) devono essere segnalati nel report e poi eliminati per le analisi successive.
 
 ```{r}
@@ -642,7 +641,46 @@ anova(model_adj, model_int, test = "LRT")
 ```
 
 
+```{r}
+# Si definisce il modello di regressione includendo sesso, education e l'interazione tra sesso ed education
+#modello <- glm(mortalità ~ sesso * education, data = dati, family = binomial())
 
+# Si ottengono le stime di effetto per maschi e femmine separatamente
+effetti_per_sesso <- predict(model_int, newdata = data.frame(sex = c("Female", "Male"), education = c("low", "medium/high")), type = "response")
+
+# Si commenta il tipo di interazione trovato
+if (summary(model_int)$coefficients[4,4] < 0.05) {
+  cat("Si riscontra una significativa interazione tra sesso ed education sulla mortalità.\n")
+  effetti_per_sesso
+} else {
+  cat("Non si riscontra una significativa interazione tra sesso ed education sulla mortalità.\n")
+}
+
+```
+
+
+```{r}
+# Si calcolano le stime di effetto per maschi e femmine separatamente
+effetto_maschi <- predict(model_adj, newdata = data.frame(sex = 'Male', education = df_colon$education))
+effetto_femmine <- predict(model_adj, newdata = data.frame(sex = 'Female', education = df_colon$education))
+
+# Si analizzano le stime di effetto per i diversi livelli di istruzione
+effetto_per_istruzione <- aggregate(cbind(effetto_maschi, effetto_femmine), by = list(df_colon$education), FUN = mean)
+
+# Si commenta il tipo di interazione trovato
+if (effetto_per_istruzione[1, "effetto_maschi"] > effetto_per_istruzione[nrow(effetto_per_istruzione), "effetto_maschi"]) {
+  cat("L'effetto di essere maschi sulla mortalità è maggiore tra coloro che hanno un basso livello di istruzione rispetto a coloro che hanno un alto livello di istruzione.\n")
+} else if (effetto_per_istruzione[1, "effetto_maschi"] < effetto_per_istruzione[nrow(effetto_per_istruzione), "effetto_maschi"]) {
+  cat("L'effetto di essere maschi sulla mortalità è minore tra coloro che hanno un basso livello di istruzione rispetto a coloro che hanno un alto livello di istruzione.\n")
+} else {
+  cat("Non si riscontra alcuna differenza significativa nelle stime di effetto tra i diversi livelli di istruzione.\n")
+}
+```
+
+
+```{r}
+effetto_per_istruzione
+```
 Il risultato riporta l'effetto del sesso (maschi vs femmine) sulla mortalità, suddiviso per i diversi livelli di istruzione (low vs medium/high).
 
 In particolare, per i soggetti con basso livello di istruzione, si osserva un effetto positivo per i maschi (effetto_maschi = 0.336), ovvero una maggiore mortalità rispetto alle femmine (effetto_femmine = -0.086).

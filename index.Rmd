@@ -101,6 +101,8 @@ sdo <- anti_join(sdo, df_non_soddisfano, by = "idnum")
 
 ```
 
+Ci sono 42 obs
+
 ### VALUTO INCONGRUENZA ETA
 ```{r}
 germanH <- germanH[germanH$age<100,] # 8 obs sopra i 100 anni

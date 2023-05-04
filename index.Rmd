@@ -484,12 +484,9 @@ exp(cbind("OR" = coef(model_colon_sex), confint.default(model_colon_sex, level =
 
 ```
 
-L'OR stimato dal modello sarà un valore maggiore di 1 se i pazienti di sesso maschile sono più probabili di morire rispetto ai pazienti di sesso femminile, e un valore inferiore a 1 se i pazienti di sesso maschile sono meno probabili di morire rispetto ai pazienti di sesso femminile. Un OR di 1 indica che non vi è alcuna differenza tra i due gruppi di sesso. OR pari a 1.54 quindi i pazienti di sesso maschile hanno più probabilità di morire per tumore al colon rispetto a quelli di sesso femminile
-
-Inoltre, il modello restituisce un valore di p che indica se l'associazione tra sesso e mortalità è statisticamente significativa. Se il valore di p è inferiore al livello di significatività scelto (ad esempio 0.05), si può concludere che l'associazione tra sesso e mortalità è statisticamente significativa. In questo caso l'associazione tra sesso e mortalità è statisticamente significativa.
-
-Infine, il modello fornisce anche l'intervallo di confidenza del 95% per l'OR stimato, che indica l'intervallo di valori entro cui si troverà il vero valore dell'OR con una probabilità del 95%. Se l'intervallo di confidenza non include il valore 1, si può concludere che l'associazione tra sesso e mortalità è statisticamente significativa. Dallo script successivo si nota come l'IC non include il valore 1 quindi associazione tra sesso e mortalità statisticamente significatova.
-
+L'OR è pari a 1.54 quindi i pazienti di sesso maschile hanno più probabilità di morire per tumore al colon rispetto a quelli di sesso femminile.
+Inoltre, si osserva che l'associazione tra sesso e mortalità è statisticamente significativa.
+Ciò è confermato anche dal fatto che l'IC non include il valore 1 quindi associazione tra sesso e mortalità statisticamente significativa.
 
 Odds ratio pari a 1.54 con IC pari a (1.24, 1.91)
 

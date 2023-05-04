@@ -150,7 +150,6 @@ table(df_seno$entro_60_giorni)
 #Denominatore: tutte le pazienti di sesso femminile con tumore al seno insorto tra 01/01/1984 e 31/01/1984, in stadio I o II, che hanno subito un intervento chirurgico
 
 #Numeratore: tutte le pazienti al denominatore con intervallo tra la data d’incidenza e la data dell’intervento ≤60 giorni
-
 ```{r}
 num <- nrow(df_seno[df_seno$entro_60_giorni == 1,])
 den <- nrow(df_seno)
@@ -176,7 +175,6 @@ indice$indice<-indice$indice*100
 
 
 ### grafico per ospedale
-
 ```{r}
 library(ggplot2)
 ggplot(indice, aes(x = ospedale, y = indice)) +
@@ -205,7 +203,6 @@ colSums(is.na(df_seno))
 df_seno$education_bin <- ifelse(df_seno$education == "low", 0, 1)
 ```
 
-In questo caso, stiamo dicendo a R di creare un modello di regressione logistica in cui la variabile dipendente è 'entro_60_giorni' (l'indicatore che vogliamo prevedere) e la variabile indipendente è 'educazione_bin' (la variabile binaria per il livello di educazione). La funzione family = binomial() specifica che vogliamo eseguire una regressione logistica.
 
 ```{r}
 # Modello di regressione logistica

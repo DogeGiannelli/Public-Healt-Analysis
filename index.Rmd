@@ -121,7 +121,7 @@ df_rl <- merge(cancer, sdo, by = "idnum", all = 'TRUE') %>%
 ```
 
 
-## Estrazine porzione di dataset d'interesse
+## Estrazione porzione di dataset d'interesse
 
 ```{r}
 df_seno <- subset(df_rl, tipotumore == 'seno' & Prestazione == 'chirurgica' & sex=='Female' & (df_rl$Stadio == 'Stadio I' | df_rl$Stadio == 'Stadio II'))
@@ -136,7 +136,8 @@ colSums(is.na(df_seno))
 ```
 
 
-### calcolo i giorno passati tra diagnosi(incidenza) e intervento
+## Calcolo dei giorno passati tra diagnosi (incidenza) e intervento
+
 ```{r}
 df_seno$giorni_passati <- as.numeric(difftime(df_seno$dataprestazione, df_seno$incidenza, units = "days"))
 
@@ -148,18 +149,18 @@ table(df_seno$entro_60_giorni)
 
 ```
 
+## Indicatore
+### Denominatore: tutte le pazienti di sesso femminile con tumore al seno insorto tra 01/01/1984 e 31/01/1984, in stadio I o II, che hanno subito un intervento chirurgico
 
+### Numeratore: tutte le pazienti al denominatore con intervallo tra la data d’incidenza e la data dell’intervento ≤60 giorni
 
-### indicatore
-#Denominatore: tutte le pazienti di sesso femminile con tumore al seno insorto tra 01/01/1984 e 31/01/1984, in stadio I o II, che hanno subito un intervento chirurgico
-
-#Numeratore: tutte le pazienti al denominatore con intervallo tra la data d’incidenza e la data dell’intervento ≤60 giorni
 ```{r}
 num <- nrow(df_seno[df_seno$entro_60_giorni == 1,])
 den <- nrow(df_seno)
 ind_tumore_seno <- (num/den)*100
 ind_tumore_seno
 ```
+
 
 
 

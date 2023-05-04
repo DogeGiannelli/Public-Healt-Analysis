@@ -339,12 +339,15 @@ plot(fit, xlab = "Time (days)", ylab = "Survival probability",
 legend("bottomleft", legend = c("Survival probability", "95% Confidence Interval"), 
        col = c("darkblue", "darkblue"), lty = c(1, 2), lwd = 1.5, cex = 0.8)
 ```
-###Quanti soggetti sono inclusi nell’analisi?
+
+## Quanti soggetti sono inclusi nell’analisi?
+
 ```{r}
 nrow(df_colon)
 ```
 
-###Quanti pazienti sono morti nel periodo di interesse?
+## Quanti pazienti sono morti nel periodo di interesse?
+
 ```{r}
 nrow(df_colon[df_colon$dead==1,])
 ```
@@ -355,7 +358,8 @@ fit1 <- prodlim(Hist(time_d,dead) ~ 1, data=df_colon)
 plot(fit1, xlim = c(0, 1825))
 abline(h=0.5, col = 'red')
 ```
-Mediana di sopravvivenza circa 1400 giorni
+
+Mediana di sopravvivenza a 5 anni è circa 1400 giorni per i pazienti affetti dal tumore al colon
 
 # 8. Stimare la di sopravvivenza nei primi 5 anni dalla diagnosi per Stadio e effettuare un test d’ipotesi per verificare se l’azzardo di morte sia diverso per stadio di malattia alla diagnosi.
 
@@ -412,12 +416,13 @@ result
 ```
 
 L'ipotesi nulla viene rigettata e si conclude che ci sono differenze significative tra i gruppi.
-Verifico allora tra quali coppie di gruppi esiste questa differenza significativa
+Si verifica allora tra quali coppie di gruppi esiste questa differenza significativa
 
 ```{r}
 pairwise <- pairwise.prop.test(observed, p.adjust.method = "bonferroni")
 pairwise
 ```
+
 Si nota come tra lo Stadio IV e tutti gli altri stadi ci siano differenze significative notevoli e che quindi l’azzardo di morte sia diverso per stadio di malattia alla diagnosi; anche tra lo Stadio III e i primi due si nota una differenza significativa notevole. Solamente tra Stadio I e Stadio II non si notano differenze significative.
 
 ```{r}
@@ -427,6 +432,7 @@ anova_model <- aov(c(haz1, haz2, haz3, haz4) ~ c(rep("Stadio I", length(haz1)), 
 # Stampa dei risultati dell'ANOVA
 summary(anova_model)
 ```
+
 Il valore di p-value molto basso ci conduce a non accettare l'ipotesi nulla concludendo che esistono differenze significative tra i gruppi.
 
 Si propone un test di Tukey post-hoc per verificare le differenze tra singoli gruppi.
@@ -438,6 +444,7 @@ tukey_results <- TukeyHSD(anova_model)
 # Stampa dei risultati del test di Tukey
 print(tukey_results)
 ```
+
 Si notano differenze significative tra tutti gli stadi, tranne che per la coppia Stadio I e Stadio II.
 
 
@@ -458,7 +465,9 @@ check<- log(-log(fit['Stadio=Stadio IV']$surv))
 lines( fit['Stadio=Stadio IV']$time, check, type='l', lwd=2, col = 'orange')
 points(fit['Stadio=Stadio IV']$time, check, col = 'orange')
 ```
-In teoria la curva che riporta l'azzardo più elevato è relativa ai pazienti in studio con tumore al colon allo Stadio IV
+
+In teoria la curva che riporta l'azzardo più elevato è relativa ai pazienti in studio con tumore al colon allo Stadio IV, come visto nei test precedenti
+
 
 # 9. Applicare un modello per valutare l’associazione tra sesso e mortalità e interpretare la misura di effetto stimata.
 
@@ -466,6 +475,7 @@ In teoria la curva che riporta l'azzardo più elevato è relativa ai pazienti in
 model_colon_sex<-glm(dead~sex,family=binomial,data=df_colon)
 summary(model_colon_sex)
 ```
+
 In base al p-value del coefficiente della variabile binaria Sex per il livello Male si può affermare la sua significatività per la variabile morte quindi è presente una forte associazione tra le due variabili. Probabilmente il genere maschile ha mortalità maggiore a quello femminile per quanto riguarda il tumore al colon.
 
 

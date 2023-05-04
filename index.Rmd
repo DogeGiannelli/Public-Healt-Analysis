@@ -357,13 +357,6 @@ unique(df_colon$Stadio)
 
 
 ```{r}
-#df_stadio <- df[!is.na(df$Stadio),]
-#df_stadio <- df_stadio[df_stadio$Stadio!='',]
-
-#df_colon$time_d <- as.numeric(as.Date(df_colon$enddate, format = "%Y-%m-%d") - as.Date(df_colon$incidenza, format = "%Y-%m-%d")) #data fine studio - data insorgenza
-```
-
-```{r}
 df_colon$Stadio <- as.factor(df_colon$Stadio)
 levels(df_colon$Stadio)
 ```

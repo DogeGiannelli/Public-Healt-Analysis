@@ -166,7 +166,7 @@ Le pazienti di sesso femminile che registrano un'insorgenza di tumore al seno di
 
 # 3. Calcolare l’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’ per ospedale e darne rappresentazione grafica, includendo come valore di riferimento nel grafico l’indicatore calcolato sull’intero dataset. Per esempi relativi alla rappresentazione grafica fare riferimento al sito Piano Nazionale Esiti (PNE) o siti analoghi trattati a lezione.
 
-### calcolo indicatore
+## Calcolo indicatore per ospedale
 
 ```{r}
 df_seno$ospedale <- as.factor(df_seno$ospedale)
@@ -179,7 +179,7 @@ indice$indice<-indice$indice*100
 ```
 
 
-### grafico per ospedale
+## Grafico per ospedale
 ```{r}
 library(ggplot2)
 ggplot(indice, aes(x = ospedale, y = indice)) +

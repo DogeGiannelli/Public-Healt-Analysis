@@ -502,7 +502,7 @@ summary(model_colon_mortality)
 round(exp(cbind("OR" = coef(model_colon_mortality), confint.default(model_colon_mortality, level = 0.95))),4)
 ```
 
-Si nota che le variabili 'smoke' e 'age' risultano significativamente associate con il target 'dead' sia analizzando la significativita' dei coefficienti del modello che osservando gli intervalli di confidenza (non presentano il valore 1 nell'IC). Si puo' quindi supporre che chi fuma ha una probabilita' del 46% maggiore di morire di tumore al colon rispetto a chi non fuma; mentre chi ha un'eta' piu' anziana ha una probabilita' dell'8% maggiore di morire di tumore al colon.
+Si nota che le variabili 'smoke' e 'age' risultano significativamente associate con il target 'dead' sia analizzando la significativita' dei coefficienti del modello che osservando gli intervalli di confidenza (non presentano il valore 1 nell'IC). Si puo' quindi supporre che chi fuma ha una probabilità del 46% maggiore di morire di tumore al colon rispetto a chi non fuma; mentre chi ha un'età più anziana ha una probabilità dell'8% maggiore di morire di tumore al colon.
 Si deve valutare se 'education' si tratta di una variabile confodente o meno.
 
 

@@ -508,15 +508,15 @@ Si deve valutare se 'education' si tratta di una variabile confodente o meno.
 
 # 11. Valutare la presenza di confondenti e/o modificatori di effetto tra le variabili disponibili nel German health register e nel registro tumori nella valutazione dell’associazione tra sesso e mortalità. Se identificate un’interazione tra sesso e un’altra variabile riportare le stime di effetto per maschi e femmine separatamente e commentare il tipo di interazione trovato.
 
-CONFONDIMENTO SI VALUTA ANALIZZANDO RAPPORTO TRA OR GREZZO E OR AGGIUSTATO --> SE VICINO A 1 VARIABILE NON CONFONDENTE
-INTERAZIONE SI VALUTA CON TEST DI OMOGENEITA (SE P-VALUE BASSO C'E INTERAZIONE) O CON TEST ANOVA
 
 ```{r}
+#CONFONDIMENTO SI VALUTA ANALIZZANDO RAPPORTO TRA OR GREZZO E OR AGGIUSTATO --> SE VICINO A 1 VARIABILE NON CONFONDENTE
+#INTERAZIONE SI VALUTA CON TEST DI OMOGENEITA (SE P-VALUE BASSO C'E INTERAZIONE) O CON TEST ANOVA
 model<-glm(dead~sex,family=binomial,data=df_colon)
 summary(model)
 ```
 
-ODDS RATIO GREZZO TRA MORTE E SESSO
+## Odds ratio grezzo tra morte e sesso
 
 ```{r}
 OR <- exp(model$coefficients)
@@ -539,11 +539,11 @@ strat$massoc.detail$OR.homog.brday
 strat
 ```
 
-Si ottengono OR grezzo pari a 1.54 e OR aggiustato pari a 1.53 --> quindi rapporto tra OR pari a 1.01 significa che variabile 'smoke' non e' una confondente
+Si ottengono OR grezzo pari a 1.54 e OR aggiustato pari a 1.53 --> quindi rapporto tra OR pari a 1.01; significa che variabile 'smoke' non è una confondente
 Inoltre si accetta l'ipotesi nulla che gli OR strato-specifici sono uguali dato che H-M test of homogeneity of ORs ha p-value pari a 0.632
 
 
-Si valuta se variabile 'MARRIED' e' confondente
+Si valuta se variabile 'MARRIED' è confondente
 
 ```{r}
 cont_table <- table(dead = df_colon$dead, 
@@ -563,7 +563,7 @@ Rapporto tra OR pari a 1 quindi MARRIED non confondente
 Interazione non significativa, quindi 'MARRIED' non modificatore d'effetto
 
 
-Si valuta se variabile 'KIDS' e' confondente
+Si valuta se variabile 'KIDS' è confondente
 
 ```{r}
 cont_table <- table(dead = df_colon$dead, 
@@ -583,7 +583,7 @@ Rapporto tra OR pari a 1 quindi KIDS non confondente
 Interazione non significativa, quindi 'KIDS' non modificatore d'effetto
 
 
-Si valuta se variabile 'WORK' e' confondente
+Si valuta se variabile 'WORK' è confondente
 
 ```{r}
 cont_table <- table(dead = df_colon$dead, 
@@ -603,7 +603,7 @@ Rapporto tra OR pari a 1 quindi WORK non confondente
 Interazione non significativa, quindi 'WORK' non modificatore d'effetto
 
 
-Si valuta se variabile 'EDUCATION' e' confondente
+Si valuta se variabile 'EDUCATION' è confondente
 
 ```{r}
 cont_table <- table(dead = df_colon$dead, 
@@ -620,7 +620,7 @@ strat
 
 Rapporto tra OR pari a 1.01 quindi EDUCATION non confondente
 
-Interazione significativa, quindi EDUCATION e' modificatore d'effetto --> si valuta anova
+Interazione significativa, quindi EDUCATION è modificatore d'effetto --> si valuta anova
 
 ```{r}
 model_adj<-glm(dead~ factor(sex) + factor(education),family=binomial,data=df_colon)
@@ -657,6 +657,7 @@ if (effetto_per_istruzione[1, "effetto_maschi"] > effetto_per_istruzione[nrow(ef
 ```{r}
 effetto_per_istruzione
 ```
+
 Il risultato riporta l'effetto del sesso (maschi vs femmine) sulla mortalità, suddiviso per i diversi livelli di istruzione (low vs medium/high).
 
 In particolare, per i soggetti con basso livello di istruzione, si osserva un effetto positivo per i maschi (effetto_maschi = 0.336), ovvero una maggiore mortalità rispetto alle femmine (effetto_femmine = -0.086).
@@ -665,7 +666,8 @@ D'altra parte, per i soggetti con medio/alto livello di istruzione, l'effetto de
 In sintesi, l'analisi mostra che l'effetto del sesso sulla mortalità è modificato dal livello di istruzione dei soggetti, evidenziando un'interazione significativa tra le due variabili.
 
 
-Si valuta se variabile 'AGE' e' confondente
+Si valuta se variabile 'AGE' è confondente
+
 ```{r}
 library(epiR)
 library(epitools)
@@ -681,22 +683,9 @@ strat$massoc.detail$OR.homog.brday
 strat
 ```
 
+Rapporto tra OR pari a 1 quindi AGE non confondente
 
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
-
-```{r}
-```
-
+Interazione non significativa, quindi 'AGE' non modificatore d'effetto
 
 # 12. A seguito delle considerazioni effettuate nei punti precedenti scegliete un modello finale per valutare i fattori di rischio della mortalità dopo diagnosi di tumore al colon e commentate i risultati.
 

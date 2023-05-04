@@ -7,7 +7,6 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-lll
 
 ```{r}
 set.seed(500)
@@ -110,21 +109,13 @@ germanH <- germanH[germanH$age<100,] # 8 obs sopra i 100 anni
 
 # 2. Effettuare il record-linkage con lo scopo di costruire l’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’ su base mensile per i casi incidenti nel mese di gennaio 1984.
 
-Il record linkage è una tecnica che permette di collegare informazioni contenute in diverse fonti dati. Per costruire l'indicatore "Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi" su base mensile per i casi incidenti nel mese di gennaio 1984, puoi seguire i seguenti passi:
-
-Unisci i dati relativi ai casi incidenti nel mese di gennaio 1984 provenienti dalle diverse fonti dati (ad esempio, i dati relativi alla diagnosi e quelli relativi all'intervento chirurgico) in un unico dataset.
-Crea una variabile che rappresenti il numero di giorni trascorsi tra la data di diagnosi e la data dell'intervento chirurgico.
-Crea una variabile binaria che assuma valore 1 se il numero di giorni trascorsi tra la data di diagnosi e la data dell'intervento chirurgico è inferiore o uguale a 60, altrimenti 0.
-Aggrega i dati per mese e calcola il numero di casi incidenti nel mese di gennaio 1984, il numero di casi in cui è stato effettuato l'intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla diagnosi e la proporzione di casi in cui è stato effettuato l'intervento chirurgico entro il termine stabilito.
-Per effettuare questi passaggi, puoi utilizzare diverse librerie di R, come ad esempio "dplyr" e "tidyr" per la manipolazione dei dati e "lubridate" per il calcolo delle differenze tra le date.
+Il record linkage
 
 ### record-linkage 
 ```{r}
 df_rl <- merge(cancer, sdo, by = "idnum", all = 'TRUE') %>% 
              merge(germanH, by = "idnum", all = 'TRUE')
 ```
-
-
 
 
 ### estraggo porzione di dataset d'interesse
@@ -141,7 +132,7 @@ colSums(is.na(df_seno))
 ```
 
 
-### calcolo i giorno passati tra diagnosi (incidenza) e intervento
+### calcolo i giorno passati tra diagnosi(incidenza) e intervento
 ```{r}
 df_seno$giorni_passati <- as.numeric(difftime(df_seno$dataprestazione, df_seno$incidenza, units = "days"))
 

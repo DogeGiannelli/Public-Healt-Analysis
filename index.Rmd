@@ -642,24 +642,6 @@ anova(model_adj, model_int, test = "LRT")
 
 
 ```{r}
-# Si definisce il modello di regressione includendo sesso, education e l'interazione tra sesso ed education
-#modello <- glm(mortalità ~ sesso * education, data = dati, family = binomial())
-
-# Si ottengono le stime di effetto per maschi e femmine separatamente
-effetti_per_sesso <- predict(model_int, newdata = data.frame(sex = c("Female", "Male"), education = c("low", "medium/high")), type = "response")
-
-# Si commenta il tipo di interazione trovato
-if (summary(model_int)$coefficients[4,4] < 0.05) {
-  cat("Si riscontra una significativa interazione tra sesso ed education sulla mortalità.\n")
-  effetti_per_sesso
-} else {
-  cat("Non si riscontra una significativa interazione tra sesso ed education sulla mortalità.\n")
-}
-
-```
-
-
-```{r}
 # Si calcolano le stime di effetto per maschi e femmine separatamente
 effetto_maschi <- predict(model_adj, newdata = data.frame(sex = 'Male', education = df_colon$education))
 effetto_femmine <- predict(model_adj, newdata = data.frame(sex = 'Female', education = df_colon$education))

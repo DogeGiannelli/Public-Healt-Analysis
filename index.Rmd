@@ -161,7 +161,7 @@ ind_tumore_seno <- (num/den)*100
 ind_tumore_seno
 ```
 
-
+Le pazienti di sesso femminile che registrano un'insorgenza di tumore al seno di stadio I o II nel mese di gennaio 1984 che vengono sottoposte a un intervento chirurgico entro 60 giorni corrispondono al 54.7% delle pazienti in analisi.
 
 
 # 3. Calcolare l’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’ per ospedale e darne rappresentazione grafica, includendo come valore di riferimento nel grafico l’indicatore calcolato sull’intero dataset. Per esempi relativi alla rappresentazione grafica fare riferimento al sito Piano Nazionale Esiti (PNE) o siti analoghi trattati a lezione.

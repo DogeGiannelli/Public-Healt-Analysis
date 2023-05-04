@@ -101,13 +101,14 @@ sdo <- anti_join(sdo, df_non_soddisfano, by = "idnum")
 
 ```
 
-Ci sono 42 obs
+Ci sono 42 osservazioni nelle quali la data di dimissione è precedente alla data di prestazione --> si decide quindi di eliminare queste righe
 
 ### VALUTO INCONGRUENZA ETA
 ```{r}
 germanH <- germanH[germanH$age<100,] # 8 obs sopra i 100 anni
 ```
 
+Nel dataset GermanH sono presenti 8 pazienti con età superiore o uguale ai 100 anni --> si decide di eliminare queste osservazioni
 
 # 2. Effettuare il record-linkage con lo scopo di costruire l’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’ su base mensile per i casi incidenti nel mese di gennaio 1984.
 

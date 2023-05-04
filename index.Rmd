@@ -193,6 +193,9 @@ ggplot(indice, aes(x = ospedale, y = indice)) +
   geom_text(aes(x = 1, y = ind_tumore_seno, label = round(ind_tumore_seno, 2)),
             hjust = -0.2, vjust = 1, color = "red", size = 3.5)
 ```
+Il grafico mostra la percentuale di “interventi chirurgici di asportazione del tumore al seno entro 60 giorni dalla diagnosi per ogni ospedale”, rispetto all'indice generale pari a 54.78% (linea rossa tratteggiata). Il valore per ciascun ospedale è rappresentato da una barra.
+
+Si può notare che l'ospedale con il valore più alto (64.29%) è il secondo, mentre quello con il valore più basso (46.15%) è il primo.
 
 
 # 4. Utilizzare il dataset ottenuto per valutare l’associazione a livello individuale tra il livello di educazione ed il valore dell’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’. Quale misura di effetto è possibile stimare? Calcolate ed interpretate tale misura di effetto grezza. Riportare anche la relativa tabella di contingenza.

@@ -68,7 +68,7 @@ summary(sdo)
 ```
 
 
-### VALUTO DATI RIPETUTI
+## VALUTO DATI RIPETUTI
 
 ```{r}
 duplicated_rows <- duplicated(cancer)
@@ -91,7 +91,8 @@ cancer <- unique(cancer)
 ```
 
 
-### VALUTO INCONGRUENZA TRA DATE
+## VALUTO INCONGRUENZA TRA DATE
+
 ```{r}
 # Selezione delle righe che soddisfano la condizione
 df_non_soddisfano <- subset(sdo, dimissione < dataprestazione) # 42 obs
@@ -103,7 +104,7 @@ sdo <- anti_join(sdo, df_non_soddisfano, by = "idnum")
 
 Ci sono 42 osservazioni nelle quali la data di dimissione è precedente alla data di prestazione --> si decide quindi di eliminare queste righe
 
-### VALUTO INCONGRUENZA ETA
+## VALUTO INCONGRUENZA ETA
 ```{r}
 germanH <- germanH[germanH$age<100,] # 8 obs sopra i 100 anni
 ```
@@ -112,22 +113,22 @@ Nel dataset GermanH sono presenti 8 pazienti con età superiore o uguale ai 100 
 
 # 2. Effettuare il record-linkage con lo scopo di costruire l’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’ su base mensile per i casi incidenti nel mese di gennaio 1984.
 
-Il record linkage
+## Record-linkage
 
-### record-linkage 
 ```{r}
 df_rl <- merge(cancer, sdo, by = "idnum", all = 'TRUE') %>% 
              merge(germanH, by = "idnum", all = 'TRUE')
 ```
 
 
-### estraggo porzione di dataset d'interesse
+## Estrazine porzione di dataset d'interesse
+
 ```{r}
 df_seno <- subset(df_rl, tipotumore == 'seno' & Prestazione == 'chirurgica' & sex=='Female' & (df_rl$Stadio == 'Stadio I' | df_rl$Stadio == 'Stadio II'))
-#df_seno <- df[df$tipotumore == 'seno',]
 ```
 
-controllo valori mancanti
+## Controllo valori mancanti
+
 ```{r}
 colSums(is.na(df_seno))
 df_seno <- df_seno[complete.cases(df_seno$incidenza),]

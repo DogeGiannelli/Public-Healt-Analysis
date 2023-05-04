@@ -180,6 +180,7 @@ indice$indice<-indice$indice*100
 
 
 ## Grafico per ospedale
+
 ```{r}
 library(ggplot2)
 ggplot(indice, aes(x = ospedale, y = indice)) +
@@ -193,14 +194,15 @@ ggplot(indice, aes(x = ospedale, y = indice)) +
   geom_text(aes(x = 1, y = ind_tumore_seno, label = round(ind_tumore_seno, 2)),
             hjust = -0.2, vjust = 1, color = "red", size = 3.5)
 ```
-Il grafico mostra la percentuale di “interventi chirurgici di asportazione del tumore al seno entro 60 giorni dalla diagnosi per ogni ospedale”, rispetto all'indice generale pari a 54.78% (linea rossa tratteggiata). Il valore per ciascun ospedale è rappresentato da una barra.
 
+Il grafico mostra la percentuale di “interventi chirurgici di asportazione del tumore al seno entro 60 giorni dalla diagnosi per ogni ospedale”, rispetto all'indice generale pari a 54.78% (linea rossa tratteggiata). Il valore per ciascun ospedale è rappresentato da una barra.
 Si può notare che l'ospedale con il valore più alto (64.29%) è il secondo, mentre quello con il valore più basso (46.15%) è il primo.
 
 
 # 4. Utilizzare il dataset ottenuto per valutare l’associazione a livello individuale tra il livello di educazione ed il valore dell’indicatore ‘Intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi’. Quale misura di effetto è possibile stimare? Calcolate ed interpretate tale misura di effetto grezza. Riportare anche la relativa tabella di contingenza.
 
-##creazione variabile binaria educazione
+## Creazione variabile binaria educazione
+
 ```{r}
 # Eliminazione delle righe con dati mancanti
 colSums(is.na(df_seno))
@@ -224,12 +226,15 @@ exp(cbind("OR" = coef(modello_logistico_seno), confint.default(modello_logistico
 ```
 
 L'odds ratio calcolato è 0.98, con un intervallo di confidenza al 95% che va da 0.51 a 1.89. Questo indica che non c'è evidenza di un'associazione significativa tra il livello di educazione e l'intervento chirurgico di asportazione del tumore al seno entro 60 giorni dalla data di diagnosi. L'OR di 0.98 indica che il rapporto tra le probabilità di avere l'intervento entro 60 giorni nel gruppo con livello di educazione "medium/high" rispetto a quello con livello di educazione "no/low" è di 0.98. Tuttavia, essendo l'intervallo di confidenza che include anche il valore 1, non possiamo considerare questo risultato statisticamente significativo.
+
 ```{r}
 # tabella di contingenza
 epi.2by2(table(df_seno$entro_60_giorni, df_seno$education_bin), method="cohort.count")
 ```
 
+
 # 5. Calcolate la stessa misura di effetto, questa volta aggiustata per la sola variabile ‘working’, mediante il metodo Mantel Haenszel. Interpretate il risultato.
+
 ```{r}
 library(epitools)
 
@@ -240,15 +245,12 @@ tab <- table(df_seno$entro_60_giorni, df_seno$education_bin, df_seno$work_bin)
 tab
 epi.2by2(tab, method="cohort.count")
 ```
+
 L'OR tra l’indicatore e "education_bin", dopo l'aggiustamento per la variabile "working" tramite il metodo Mantel-Haenszel, è pari a 0.98.
 Dato il rapporto tra OR grezzo e OR M-H  pari a 1 si può affermare che “working” non è una variabile confondente.
 
 
-#6. Stimate l’associazione a livello individuale tra il livello di educazione ed il valore
-dell’indicatore, aggiustata per tutte le variabili disponibili che ritenete opportuno inserire
-come potenziali confondenti, mediante un modello di regressione logistica.
-Interpretate i risultati.
-Su quanti soggetti avete effettuato l’analisi?
+# 6. Stimate l’associazione a livello individuale tra il livello di educazione ed il valore dell’indicatore, aggiustata per tutte le variabili disponibili che ritenete opportuno inserire come potenziali confondenti, mediante un modello di regressione logistica. Interpretate i risultati. Su quanti soggetti avete effettuato l’analisi?
 
 ```{r}
 model_overall_seno <- glm(entro_60_giorni ~ education_bin, data = df_seno, family = binomial())
@@ -282,6 +284,8 @@ exp(cbind("OR" = coef(model_adj_seno_age), confint.default(model_adj_seno_age, l
 
 ratio_age = exp(coef(model_overall_seno)['education_bin'])/exp(coef(model_adj_seno_age)['education_bin'])
 ```
+
+Si valuta il rapporto tra OR grezzo e OR aggiustato per M-H: se il rapporto è molto simile a 1 allora non c'è evidenza significativa per affermare che la terza variabile in analisi sia confondente per quanto riguarda l'associazione tra indicatore e educazione.
 
 ratio_geneticm --> 1.037429  non confondente
 

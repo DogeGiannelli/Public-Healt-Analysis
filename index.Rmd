@@ -450,7 +450,7 @@ Si notano differenze significative tra tutti gli stadi, tranne che per la coppia
 
 ```{r}
 check<- log(-log(fit['Stadio=Stadio I']$surv))
-plot(fit['Stadio=Stadio I']$time, check, type='l', xlab='time', ylab='log( -log( S(t) ) )', ylim=c(-7,1.8), col = 'purple')
+plot(fit['Stadio=Stadio I']$time, check, type='l', xlab='Time (days)', ylab='Hazard Function', ylim=c(-7,1.8), col = 'purple')
 points(fit['Stadio=Stadio I']$time, check, col = 'purple')
 
 check<- log(-log(fit['Stadio=Stadio II']$surv))
@@ -464,6 +464,10 @@ points(fit['Stadio=Stadio III']$time, check, col = 'green')
 check<- log(-log(fit['Stadio=Stadio IV']$surv))
 lines( fit['Stadio=Stadio IV']$time, check, type='l', lwd=2, col = 'orange')
 points(fit['Stadio=Stadio IV']$time, check, col = 'orange')
+
+legend('bottomright', legend = levels(df_colon$Stadio), col = c('purple', 'blue', 'green', 'orange'), lty = 1, cex = 0.8)
+
+
 ```
 
 In teoria la curva che riporta l'azzardo più elevato è relativa ai pazienti in studio con tumore al colon allo Stadio IV, come visto nei test precedenti

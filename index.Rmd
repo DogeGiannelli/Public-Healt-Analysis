@@ -638,37 +638,21 @@ exp(cbind("OR" = coef(model_int), confint.default(model_int, level = 0.95)))
 anova(model_adj, model_int, test = "LRT")
 ```
 
-
 ```{r}
 # Si calcolano le stime di effetto per maschi e femmine separatamente
-effetto_maschi <- predict(model_adj, newdata = data.frame(sex = 'Male', education = df_colon$education))
-effetto_femmine <- predict(model_adj, newdata = data.frame(sex = 'Female', education = df_colon$education))
+df_colon$education<-as.factor(df_colon$education)
+cont_table_education_male <- table(education = relevel(df_colon$education, "medium/high")[df_colon$sex=="Male"], dead = relevel(df_colon$dead, "1")[df_colon$sex=="Male"])
+strat_education_male<-epi.2by2(dat=cont_table_education_male, method="cohort.count")
+strat_education_male
 
-# Si analizzano le stime di effetto per i diversi livelli di istruzione
-effetto_per_istruzione <- aggregate(cbind(effetto_maschi, effetto_femmine), by = list(df_colon$education), FUN = mean)
-
-# Si commenta il tipo di interazione trovato
-if (effetto_per_istruzione[1, "effetto_maschi"] > effetto_per_istruzione[nrow(effetto_per_istruzione), "effetto_maschi"]) {
-  cat("L'effetto di essere maschi sulla mortalità è maggiore tra coloro che hanno un basso livello di istruzione rispetto a coloro che hanno un alto livello di istruzione.\n")
-} else if (effetto_per_istruzione[1, "effetto_maschi"] < effetto_per_istruzione[nrow(effetto_per_istruzione), "effetto_maschi"]) {
-  cat("L'effetto di essere maschi sulla mortalità è minore tra coloro che hanno un basso livello di istruzione rispetto a coloro che hanno un alto livello di istruzione.\n")
-} else {
-  cat("Non si riscontra alcuna differenza significativa nelle stime di effetto tra i diversi livelli di istruzione.\n")
-}
+cont_table_education_female <- table(education = relevel(df_colon$education, "medium/high")[df_colon$sex=="Female"], dead = relevel(df_colon$dead, "1")[colon$sex=="Female"])
+strat_education_female<-epi.2by2(dat=cont_table_education_female, method="cohort.count")
+strat_education_female
 ```
-
-
-```{r}
-effetto_per_istruzione
-```
-
-Il risultato riporta l'effetto del sesso (maschi vs femmine) sulla mortalità, suddiviso per i diversi livelli di istruzione (low vs medium/high).
-
-In particolare, per i soggetti con basso livello di istruzione, si osserva un effetto positivo per i maschi (effetto_maschi = 0.336), ovvero una maggiore mortalità rispetto alle femmine (effetto_femmine = -0.086).
-D'altra parte, per i soggetti con medio/alto livello di istruzione, l'effetto del sesso sulla mortalità è ancora maggiore per i maschi (effetto_maschi = 0.963), ma anche per le femmine (effetto_femmine = 0.541), evidenziando una maggiore omogeneità nell'effetto del sesso sulla mortalità tra i soggetti con livelli di istruzione più elevati.
 
 In sintesi, l'analisi mostra che l'effetto del sesso sulla mortalità è modificato dal livello di istruzione dei soggetti, evidenziando un'interazione significativa tra le due variabili.
 
+LE DONNE PIU' ISTRUITE affette da TUMORE AL COLON hanno più probabilità di morire rispetto alle DONNE MENO ISTRUITE
 
 Si valuta se variabile 'AGE' è confondente
 

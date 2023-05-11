@@ -681,7 +681,7 @@ Poiché lo studio è uno studio di mortalità, si utilizza il modello di Cox per
 
 ```{r}
 df_colon$sex<-as.factor(df_colon$sex)
-model_cox <- coxph(Surv(time_d, I(as.numeric(dead))) ~ relevel(sex, "Male") + geneticm  + Stadio + smoke + age, data=df_colon)
+model_cox <- coxph(Surv(time_d, I(as.numeric(dead))) ~ relevel(sex, "Male") + geneticm  + Stadio + smoke + age + education, data=df_colon)
 summary(model_cox)
 ```
 
@@ -703,7 +703,7 @@ L'assunto è verificato per tutte le variabili prese singolarmente e per il mode
 Si inseriscono ora nel modello le modifiche di effetto studiate nel punto 11.
 
 ```{r}
-model_cox_2 <- coxph(Surv(time_d, I(as.numeric(dead))) ~ relevel(sex, "Male") * geneticm + relevel(sex, "Male") * Stadio + smoke + age, data=df_colon)
+model_cox_2 <- coxph(Surv(time_d, I(as.numeric(dead))) ~ relevel(sex, "Male") * geneticm + relevel(sex, "Male") * Stadio + relevel(sex, "Male") * education + smoke + age, data=df_colon)
 summary(model_cox_2)
 ```
 

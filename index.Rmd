@@ -520,7 +520,7 @@ model<-glm(dead~sex,family=binomial,data=df_colon)
 summary(model)
 ```
 
-## Odds ratio grezzo tra morte e sesso
+Odds ratio grezzo tra morte e sesso
 
 ```{r}
 OR <- exp(model$coefficients)
@@ -641,14 +641,18 @@ anova(model_adj, model_int, test = "LRT")
 ```{r}
 # Si calcolano le stime di effetto per maschi e femmine separatamente
 df_colon$education<-as.factor(df_colon$education)
+df_colon$dead<-as.factor(df_colon$dead)
 cont_table_education_male <- table(education = relevel(df_colon$education, "medium/high")[df_colon$sex=="Male"], dead = relevel(df_colon$dead, "1")[df_colon$sex=="Male"])
 strat_education_male<-epi.2by2(dat=cont_table_education_male, method="cohort.count")
 strat_education_male
 
-cont_table_education_female <- table(education = relevel(df_colon$education, "medium/high")[df_colon$sex=="Female"], dead = relevel(df_colon$dead, "1")[colon$sex=="Female"])
+cont_table_education_female <- table(education = relevel(df_colon$education, "medium/high")[df_colon$sex=="Female"], dead = relevel(df_colon$dead, "1")[df_colon$sex=="Female"])
 strat_education_female<-epi.2by2(dat=cont_table_education_female, method="cohort.count")
 strat_education_female
 ```
+
+
+
 
 In sintesi, l'analisi mostra che l'effetto del sesso sulla mortalità è modificato dal livello di istruzione dei soggetti, evidenziando un'interazione significativa tra le due variabili.
 
@@ -710,7 +714,7 @@ summary(model_cox_2)
 I test di ipotesi riportano che il modello di Cox è significativo.
 In particolare, risultano significative le variabili "sex", "geneticm", "Stadio" per il quarto livello e "age".
 
-In merito alle interazioni inserite nel modello, risultano significative quelle tra "sex" e "Stadio II" e tra "sex" e "Stadio III".
+In merito alle interazioni inserite nel modello, risultano significative quelle tra "sex" e "Stadio II", tra "sex" e "Stadio III".
 
 L'Hazard Ratio risulta significativamente superiore a 1 per le variabili "geneticm", "Stadio IV" e "age" e per le interazioni tra "sex" e "Stadio II" e tra "sex" e "Stadio III". Queste variabili sono positivamente associate con il rischio di mortalità. L'Hazard Ratio risulta invece significativamente inferiore a 1 per la variabile "sex". Le restanti variabili hanno un Hazard Ratio non significativamente diverso da 1.
 
